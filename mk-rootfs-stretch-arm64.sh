@@ -168,6 +168,9 @@ else
 fi
 
 #---------------Others--------------
+#---------Camera---------
+dpkg -i  /packages/others/camera/*
+
 #---------FFmpeg---------
 # The following packages are included in the base system.
 #if [ "$PACKAGE" == "update" ]; then
