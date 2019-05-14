@@ -3,6 +3,10 @@
 # Directory contains the target rootfs
 TARGET_ROOTFS_DIR="binary"
 
+if [ ! $PACKAGE ]; then
+	PACKAGE='local'
+fi
+
 if [ ! $ARCH ]; then
 	ARCH='arm64'
 fi
@@ -26,6 +30,12 @@ sudo tar -xpf linaro-stretch-alip-*.tar.gz
 echo -e "\033[36m Copy overlay to rootfs \033[0m"
 sudo mkdir -p $TARGET_ROOTFS_DIR/packages
 sudo cp -rf packages/$ARCH/* $TARGET_ROOTFS_DIR/packages
+
+if [ "$PACKAGE" == "local" ]; then
+sudo mkdir -p $TARGET_ROOTFS_DIR/packages/local_packages
+sudo cp -rf local_packages/* $TARGET_ROOTFS_DIR/packages/local_packages
+fi
+
 # some configs
 sudo cp -rf overlay/* $TARGET_ROOTFS_DIR/
 if [ "$ARCH" == "arm64"  ]; then
@@ -70,31 +80,55 @@ sudo mount -o bind /dev $TARGET_ROOTFS_DIR/dev
 cat <<EOF | sudo chroot $TARGET_ROOTFS_DIR
 
 chmod o+x /usr/lib/dbus-1.0/dbus-daemon-launch-helper
+
+if [ "$PACKAGE" == "local" ]; then
+#dpkg -i -G -B /packages/packages-local/*.deb
+dpkg -i /packages/local_packages/*.deb
+fi
+
+if [ "$PACKAGE" == "update" ]; then
 apt-get update
 apt-get install -y blueman:arm64
+fi
+
 echo exit 101 > /usr/sbin/policy-rc.d
 chmod +x /usr/sbin/policy-rc.d
+
+if [ "$PACKAGE" == "update" ]; then
 apt-get install -y blueman:arm64
+fi
+
 rm -f /usr/sbin/policy-rc.d
 
 #---------------conflict workaround --------------
 apt-get remove -y xserver-xorg-input-evdev
 
+if [ "$PACKAGE" == "update" ]; then
 apt-get install -y libxfont1 libinput-bin libinput10 libwacom-common libwacom2 libunwind8 xserver-xorg-input-libinput
+fi
 
 #---------------Xserver--------------
 echo -e "\033[36m Setup Xserver.................... \033[0m"
 dpkg -i  /packages/xserver/*
+
+if [ "$PACKAGE" == "update" ]; then
 apt-get install -f -y
+fi
 
 #---------------Video--------------
 echo -e "\033[36m Setup Video.................... \033[0m"
+
+if [ "$PACKAGE" == "update" ]; then
 apt-get install -y gstreamer1.0-plugins-base gstreamer1.0-tools gstreamer1.0-alsa \
 	gstreamer1.0-plugins-good  gstreamer1.0-plugins-bad alsa-utils
+fi
 
 dpkg -i  /packages/video/mpp/*.deb
 dpkg -i  /packages/video/gstreamer/*.deb
+
+if [ "$PACKAGE" == "update" ]; then
 apt-get install -f -y
+fi
 
 #------------------libdrm------------
 #dpkg -i  /packages/libdrm/*.deb
@@ -104,26 +138,37 @@ apt-get install -f -y
 dpkg -l | grep lxde
 if [ "$?" -eq 0 ]; then
 	# if target is base, we won't install qt
+	if [ "$PACKAGE" == "update" ]; then
 	apt-get install -y libqt5opengl5 libqt5qml5 libqt5quick5 libqt5widgets5 libqt5gui5 libqt5core5a qml-module-qtquick2 \
 		libqt5multimedia5 libqt5multimedia5-plugins libqt5multimediaquick-p5
+	fi
+
 	dpkg -i  /packages/video/qt/*
+
+	if [ "$PACKAGE" == "update" ]; then
 	apt-get install -f -y
+	fi
 else
 	echo "won't install qt"
 fi
 
 #---------------Others--------------
 #---------FFmpeg---------
+if [ "$PACKAGE" == "update" ]; then
 apt-get install -y libsdl2-2.0-0:arm64 libcdio-paranoia1:arm64 libjs-bootstrap:arm64 libjs-jquery:arm64
+fi
+
 dpkg -i  /packages/others/ffmpeg/*
 #---------MPV---------
 dpkg -i  /packages/others/mpv/*
 apt-get install -f -y
 
 #---------------Debug-------------- 
-if [ "$VERSION" == "debug" ] || [ "$VERSION" == "jenkins" ] ; then
-	apt-get install -y sshfs openssh-server bash-completion
-fi
+# The followings are commented out by ASUS.
+# Let don't have these for all all builds.
+#if [ "$VERSION" == "debug" ] || [ "$VERSION" == "jenkins" ] ; then
+#	apt-get install -y sshfs openssh-server bash-completion
+#fi
 
 #---------------Custom Script-------------- 
 systemctl enable rockchip.service
