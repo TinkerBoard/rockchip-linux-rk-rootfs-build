@@ -99,7 +99,7 @@ netcat-openbsd
 network-manager-gnome
 #nodejs-legacy
 #npm
-#ntp
+ntp
 ntpdate
 obconf
 #obexftp
@@ -126,6 +126,7 @@ rsyslog
 ssh-import-id
 strace
 sudo
+synaptic
 trace-cmd
 udev
 unzip
