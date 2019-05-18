@@ -180,6 +180,8 @@ rm /lib/systemd/system/wpa_supplicant@.service
 ln -s /usr/lib/aarch64-linux-gnu/libGLESv2.so /usr/lib/chromium/libGLESv2.so
 ln -s /usr/lib/aarch64-linux-gnu/libEGL.so /usr/lib/chromium/libEGL.so
 
+echo $VERSION_NUMBER > /etc/version
+
 #---------------Clean-------------- 
 rm -rf /var/lib/apt/lists/*
 
