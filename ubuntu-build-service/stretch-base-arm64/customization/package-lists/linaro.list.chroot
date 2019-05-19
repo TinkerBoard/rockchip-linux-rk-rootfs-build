@@ -158,5 +158,4 @@ zip
 #lxde-common
 #desktop-base
 systemd-sysv
-v4l-utils
 
