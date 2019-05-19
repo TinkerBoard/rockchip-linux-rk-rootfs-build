@@ -12,6 +12,7 @@ apt
 apt-utils
 #babeltrace
 bc
+blueman
 bluez
 btrfs-tools
 #build-essential
@@ -135,6 +136,7 @@ usbutils
 user-setup
 vim
 vim-tiny
+v4l-utils
 #wamerican
 wget
 whiptail

@@ -88,17 +88,17 @@ fi
 
 if [ "$PACKAGE" == "update" ]; then
 apt-get update
-apt-get install -y blueman:arm64
+#apt-get install -y blueman:arm64
 fi
 
-echo exit 101 > /usr/sbin/policy-rc.d
-chmod +x /usr/sbin/policy-rc.d
+#echo exit 101 > /usr/sbin/policy-rc.d
+#chmod +x /usr/sbin/policy-rc.d
 
-if [ "$PACKAGE" == "update" ]; then
-apt-get install -y blueman:arm64
-fi
+#if [ "$PACKAGE" == "update" ]; then
+#apt-get install -y blueman:arm64
+#fi
 
-rm -f /usr/sbin/policy-rc.d
+#rm -f /usr/sbin/policy-rc.d
 
 #---------------conflict workaround --------------
 apt-get remove -y xserver-xorg-input-evdev
