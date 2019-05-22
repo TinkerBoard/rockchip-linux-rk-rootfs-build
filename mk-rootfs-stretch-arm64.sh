@@ -165,7 +165,8 @@ apt-get install -f -y
 
 #---------------Debug-------------- 
 # The followings are commented out by ASUS.
-# Let don't have these for all all builds.
+# The bash-completion is included in the base system.
+# For the reset, let don't have them for all builds.
 #if [ "$VERSION" == "debug" ] || [ "$VERSION" == "jenkins" ] ; then
 #	apt-get install -y sshfs openssh-server bash-completion
 #fi
