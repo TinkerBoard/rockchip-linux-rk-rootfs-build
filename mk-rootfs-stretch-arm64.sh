@@ -10,6 +10,7 @@ fi
 if [ ! $ARCH ]; then
 	ARCH='arm64'
 fi
+
 if [ ! $VERSION ]; then
 	VERSION="debug"
 fi
@@ -33,7 +34,7 @@ sudo cp -rf packages/$ARCH/* $TARGET_ROOTFS_DIR/packages
 
 if [ "$PACKAGE" == "local" ]; then
 sudo mkdir -p $TARGET_ROOTFS_DIR/packages/local_packages
-sudo cp -rf local_packages/* $TARGET_ROOTFS_DIR/packages/local_packages
+sudo cp -rf local_packages-$VERSION/* $TARGET_ROOTFS_DIR/packages/local_packages
 fi
 
 # some configs
@@ -164,12 +165,13 @@ dpkg -i  /packages/others/mpv/*
 apt-get install -f -y
 
 #---------------Debug-------------- 
-# The followings are commented out by ASUS.
-# The bash-completion is included in the base system.
-# For the reset, let don't have them for all builds.
-#if [ "$VERSION" == "debug" ] || [ "$VERSION" == "jenkins" ] ; then
-#	apt-get install -y sshfs openssh-server bash-completion
-#fi
+if [ "$PACKAGE" == "update" ]; then
+    if [ "$VERSION" == "debug" ] || [ "$VERSION" == "jenkins" ] ; then
+        # The package bash-completion is included in the base system.
+        #apt-get install -y sshfs openssh-server bash-completion
+        apt-get install -y sshfs openssh-server
+    fi
+fi
 
 #---------------Custom Script-------------- 
 systemctl enable rockchip.service
@@ -181,7 +183,7 @@ rm /lib/systemd/system/wpa_supplicant@.service
 ln -s /usr/lib/aarch64-linux-gnu/libGLESv2.so /usr/lib/chromium/libGLESv2.so
 ln -s /usr/lib/aarch64-linux-gnu/libEGL.so /usr/lib/chromium/libEGL.so
 
-echo $VERSION_NUMBER > /etc/version
+echo $VERSION_NUMBER-$VERSION > /etc/version
 
 #---------------Clean-------------- 
 rm -rf /var/lib/apt/lists/*
