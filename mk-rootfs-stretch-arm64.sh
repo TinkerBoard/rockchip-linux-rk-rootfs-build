@@ -102,11 +102,11 @@ fi
 #rm -f /usr/sbin/policy-rc.d
 
 #---------------conflict workaround --------------
-apt-get remove -y xserver-xorg-input-evdev
+# The package xserver-xorg-input-evdev is removed from the base system.
+#apt-get remove -y xserver-xorg-input-evdev
 
-if [ "$PACKAGE" == "update" ]; then
-apt-get install -y libxfont1 libinput-bin libinput10 libwacom-common libwacom2 libunwind8 xserver-xorg-input-libinput
-fi
+# The following packages are included in the base system.
+#apt-get install -y libxfont1 libinput-bin libinput10 libwacom-common libwacom2 libunwind8 xserver-xorg-input-libinput
 
 #---------------Xserver--------------
 echo -e "\033[36m Setup Xserver.................... \033[0m"
@@ -165,13 +165,10 @@ dpkg -i  /packages/others/mpv/*
 apt-get install -f -y
 
 #---------------Debug-------------- 
-if [ "$PACKAGE" == "update" ]; then
-    if [ "$VERSION" == "debug" ] || [ "$VERSION" == "jenkins" ] ; then
-        # The package bash-completion is included in the base system.
-        #apt-get install -y sshfs openssh-server bash-completion
-        apt-get install -y sshfs openssh-server
-    fi
-fi
+# The following packages are included in the base system.
+#if [ "$VERSION" == "debug" ] || [ "$VERSION" == "jenkins" ] ; then
+#    apt-get install -y sshfs openssh-server bash-completion
+#fi
 
 #---------------Custom Script-------------- 
 systemctl enable rockchip.service

@@ -80,7 +80,13 @@ iw
 kbd
 kmod
 less
+libinput-bin
+libinput10
+libunwind8
+libwacom-common
+libwacom2
 libxatracker2
+libxfont1
 lightdm
 #linaro-artwork
 #linaro-default-settings
@@ -134,6 +140,7 @@ resolvconf
 rfkill
 rsyslog
 scratch
+sshfs
 ssh-import-id
 strace
 sudo
@@ -162,7 +169,8 @@ xmms2-plugin-mad
 xmms2-plugin-pulse
 xmms2-plugin-vorbis
 xserver-xorg
-xserver-xorg-input-evdev
+#xserver-xorg-input-evdev
+xserver-xorg-input-libinput
 #xserver-xorg-video-fbdev
 xserver-xorg-video-modesetting
 #xscreensaver
