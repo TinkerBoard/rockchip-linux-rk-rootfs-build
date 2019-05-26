@@ -89,17 +89,13 @@ fi
 
 if [ "$PACKAGE" == "update" ]; then
 apt-get update
+# The package blueman is included in the base system.
 #apt-get install -y blueman:arm64
-fi
-
 #echo exit 101 > /usr/sbin/policy-rc.d
 #chmod +x /usr/sbin/policy-rc.d
-
-#if [ "$PACKAGE" == "update" ]; then
 #apt-get install -y blueman:arm64
-#fi
-
 #rm -f /usr/sbin/policy-rc.d
+fi
 
 #---------------conflict workaround --------------
 # The package xserver-xorg-input-evdev is removed from the base system.
@@ -167,7 +163,7 @@ apt-get install -f -y
 #---------------Debug-------------- 
 # The following packages are included in the base system.
 #if [ "$VERSION" == "debug" ] || [ "$VERSION" == "jenkins" ] ; then
-#    apt-get install -y sshfs openssh-server bash-completion
+#	apt-get install -y sshfs openssh-server bash-completion
 #fi
 
 #---------------Custom Script-------------- 
