@@ -115,8 +115,8 @@ network-manager-gnome
 #nodejs-legacy
 #npm
 ntfs-3g
-ntp
-ntpdate
+#ntp
+#ntpdate
 obconf
 #obexftp
 #obexpushd
