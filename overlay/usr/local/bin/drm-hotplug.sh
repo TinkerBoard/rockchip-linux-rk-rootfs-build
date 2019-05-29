@@ -16,11 +16,19 @@ for user in root $(users);do
 done
 [ $USER ] || exit 0
 
+# Find disconnected monitors
+MONITORS_DISCONNECTED=$(sudo -u $user xrandr|grep -w disconnected|cut -d' ' -f1)
+for monitor in $MONITORS_DISCONNECTED;do
+    # handle disconnected
+    sudo -u $user xrandr --output $monitor --off
+done
+
+
 # Find connected monitors
-MONITORS=$(sudo -u $user xrandr|grep -w connected|cut -d' ' -f1)
+MONITORS_CONNECTED=$(sudo -u $user xrandr|grep -w connected|cut -d' ' -f1)
 
 # Make sure every connected monitors been enabled with a valid mode.
-for monitor in $MONITORS;do
+for monitor in $MONITORS_CONNECTED;do
     # Unlike the drm driver, X11 modesetting drv uses HDMI for HDMI-A
     CRTC=$(echo $monitor|sed "s/HDMI\(-[^B]\)/HDMI-A\1/")
 
