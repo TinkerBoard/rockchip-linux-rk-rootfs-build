@@ -105,6 +105,7 @@ lxtask
 makedev
 man-db
 mawk
+memtester
 mesa-utils
 mesa-utils-extra
 mutrace
