@@ -25,6 +25,11 @@ finish() {
 }
 trap finish ERR
 
+if [ -e $TARGET_ROOTFS_DIR ]; then
+    echo "Found the directory $TARGET_ROOTFS_DIR. Remove it now."
+    sudo rm -rf $TARGET_ROOTFS_DIR
+fi
+
 echo -e "\033[36m Extract image \033[0m"
 sudo tar -xpf linaro-stretch-alip-*.tar.gz
 
