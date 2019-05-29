@@ -62,7 +62,7 @@ gvfs
 gvfs-backends
 hostapd
 #htop
-#i2c-tools
+i2c-tools
 idle
 idle3
 idlestat
