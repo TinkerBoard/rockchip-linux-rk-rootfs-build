@@ -124,10 +124,11 @@ chmod 666 /etc/audio/audio.conf
 #---------------Video--------------
 echo -e "\033[36m Setup Video.................... \033[0m"
 
-if [ "$PACKAGE" == "update" ]; then
-apt-get install -y gstreamer1.0-plugins-base gstreamer1.0-tools gstreamer1.0-alsa \
-	gstreamer1.0-plugins-good  gstreamer1.0-plugins-bad alsa-utils
-fi
+# The following packages are included in the base system.
+#if [ "$PACKAGE" == "update" ]; then
+#apt-get install -y gstreamer1.0-plugins-base gstreamer1.0-tools gstreamer1.0-alsa \
+#	gstreamer1.0-plugins-good  gstreamer1.0-plugins-bad alsa-utils
+#fi
 
 dpkg -i  /packages/video/mpp/*.deb
 dpkg -i  /packages/video/gstreamer/*.deb
@@ -143,11 +144,12 @@ fi
 #---------------Qt-Video--------------
 dpkg -l | grep lxde
 if [ "$?" -eq 0 ]; then
+        # The following packages are included in the base system.
 	# if target is base, we won't install qt
-	if [ "$PACKAGE" == "update" ]; then
-	apt-get install -y libqt5opengl5 libqt5qml5 libqt5quick5 libqt5widgets5 libqt5gui5 libqt5core5a qml-module-qtquick2 \
-		libqt5multimedia5 libqt5multimedia5-plugins libqt5multimediaquick-p5
-	fi
+	#if [ "$PACKAGE" == "update" ]; then
+	#apt-get install -y libqt5opengl5 libqt5qml5 libqt5quick5 libqt5widgets5 libqt5gui5 libqt5core5a qml-module-qtquick2 \
+	#	libqt5multimedia5 libqt5multimedia5-plugins libqt5multimediaquick-p5
+	#fi
 
 	dpkg -i  /packages/video/qt/*
 
@@ -160,9 +162,10 @@ fi
 
 #---------------Others--------------
 #---------FFmpeg---------
-if [ "$PACKAGE" == "update" ]; then
-apt-get install -y libsdl2-2.0-0:arm64 libcdio-paranoia1:arm64 libjs-bootstrap:arm64 libjs-jquery:arm64
-fi
+# The following packages are included in the base system.
+#if [ "$PACKAGE" == "update" ]; then
+#apt-get install -y libsdl2-2.0-0:arm64 libcdio-paranoia1:arm64 libjs-bootstrap:arm64 libjs-jquery:arm64
+#fi
 
 dpkg -i  /packages/others/ffmpeg/*
 #---------MPV---------
@@ -174,6 +177,8 @@ apt-get install -f -y
 #if [ "$VERSION" == "debug" ] || [ "$VERSION" == "jenkins" ] ; then
 #	apt-get install -y sshfs openssh-server bash-completion
 #fi
+
+apt autoremove -y
 
 #---------------Custom Script-------------- 
 systemctl enable rockchip.service
