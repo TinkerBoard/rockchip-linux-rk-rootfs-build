@@ -117,6 +117,10 @@ if [ "$PACKAGE" == "update" ]; then
 apt-get install -f -y
 fi
 
++#---------------Audio-----------------------
+chmod 755 /etc/audio/auto_audio_switch.sh
+chmod 666 /etc/audio/audio.conf
+
 #---------------Video--------------
 echo -e "\033[36m Setup Video.................... \033[0m"
 
