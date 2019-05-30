@@ -8,6 +8,7 @@ if [ "$1" == "in" ] || [ "$1" == "boot-in" ]; then
 	echo "Audio Jack Plug In"
 	amixer -c 0 cset numid=1 6
 	amixer -c 0 cset numid=2 2
+	sleep 0.5
 	if [ "${auto_switch_audio_output_path}" == "on" ]; then
 		if [ "$1" == "boot-in" ]; then
 			sleep 3
@@ -25,8 +26,9 @@ if [ "$1" == "out" ] || [ "$1" == "boot-out" ]; then
 	echo "Audio Jack Plug Out"
 	amixer -c 0 cset numid=1 0
 	amixer -c 0 cset numid=2 0
+	sleep 0.5
 	if [ "${auto_switch_audio_output_path}" == "on" ]; then
-		if [ "$1" == "boot-in" ]; then
+		if [ "$1" == "boot-out" ]; then
 			sleep 3
 		fi
 		echo "Switch audio output path : ${default_audio_output_path} (Default)"
