@@ -14,6 +14,7 @@ if [ "$1" == "in" ] || [ "$1" == "boot-in" ]; then
 			sleep 3
 		fi
 		echo "Switch audio output path : alsa_output.platform-rk809-sound.analog-stereo (Headset)"
+		sudo -u linaro DISPLAY=:0.0 notify-send -t 3000 "Audio Jack Plug-In"
 		sudo -u linaro PULSE_RUNTIME_PATH=/run/user/1000/pulse pacmd set-default-sink alsa_output.platform-rk809-sound.analog-stereo
 		sudo -u linaro PULSE_RUNTIME_PATH=/run/user/1000/pulse pacmd list-sink-inputs | grep index | while read line
 		do
@@ -32,6 +33,7 @@ if [ "$1" == "out" ] || [ "$1" == "boot-out" ]; then
 			sleep 3
 		fi
 		echo "Switch audio output path : ${default_audio_output_path} (Default)"
+		sudo -u linaro DISPLAY=:0.0 notify-send -t 3000 "Audio Jack Plug-Out"
 		sudo -u linaro PULSE_RUNTIME_PATH=/run/user/1000/pulse pacmd set-default-sink ${default_audio_output_path}
 		sudo -u linaro PULSE_RUNTIME_PATH=/run/user/1000/pulse pacmd list-sink-inputs | grep index | while read line
 		do
