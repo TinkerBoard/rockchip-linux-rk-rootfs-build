@@ -87,6 +87,7 @@ libinput-bin
 libinput10
 libjs-bootstrap
 libjs-jquery
+libnotify-bin
 libqt5core5a
 libqt5gui5
 libqt5multimedia5
@@ -181,6 +182,7 @@ wpasupplicant
 x11-utils
 x11-xserver-utils
 xdg-user-dirs-gtk
+xfce4-notifyd
 xfce4-power-manager-plugins
 xinit
 xmms2-client-cli
