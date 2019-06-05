@@ -186,6 +186,9 @@ systemctl mask systemd-networkd-wait-online.service
 systemctl mask NetworkManager-wait-online.service
 rm /lib/systemd/system/wpa_supplicant@.service
 
+if [ "$VERSION" == "debug" ] || [ "$VERSION" == "jenkins" ] ; then
+	systemctl enable test.service
+fi
 #---------------get accelerated back for chromium v61--------------
 ln -s /usr/lib/aarch64-linux-gnu/libGLESv2.so /usr/lib/chromium/libGLESv2.so
 ln -s /usr/lib/aarch64-linux-gnu/libEGL.so /usr/lib/chromium/libEGL.so
