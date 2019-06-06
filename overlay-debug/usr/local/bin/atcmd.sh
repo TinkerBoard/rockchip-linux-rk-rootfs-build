@@ -35,7 +35,7 @@ function Res_IMSI() {
     echo "Start read file..."
 
     while read line; do
-        echo $line
+        #echo $line
         if [[ $line =~ ^[0-9]+$ ]] || [[ $line == *"ERROR"* ]]; then
             break
         fi
@@ -46,7 +46,7 @@ function Res_IMSI() {
     elif [[ $line =~ ^[0-9]+$ ]]; then
         echo "SIM IMSI: $line"
     else
-        echo "others: $line"
+        echo "no SIM: others ERROR: $line"
     fi
 }
 
@@ -54,18 +54,18 @@ function Res_IMEI() {
     echo "Start read file..."
 
     while read line; do
-        echo $line
+        #echo $line
         if [[ $line =~ ^[0-9]+$ ]] || [[ $line == *"ERROR"* ]]; then
             break
         fi
     done < $RES_FILE
 
     if [[ $line == *"ERROR"* ]]; then
-        echo "get IMEI fail: $line"
+        echo "no IMEI: $line"
     elif [[ $line =~ ^[0-9]+$ ]]; then
         echo "IMEI: $line"
     else
-        echo "others: $line"
+        echo "no IMEI: others ERROR: $line"
     fi
 }
 
@@ -102,7 +102,7 @@ elif [ "$option" == "cfun" -o "$option" == "CFUN" ]; then
     Res_normal
 else
     echo "Cmd = $option . Maybe not support."
-    Sned_CMD "$CMD"
+    Sned_CMD "$option"
     Res_normal
 fi
 
