@@ -94,6 +94,7 @@ fi
 
 if [ "$PACKAGE" == "update" ]; then
 apt-get update
+apt-get install -y lxpolkit
 # The package blueman is included in the base system.
 #apt-get install -y blueman:arm64
 #echo exit 101 > /usr/sbin/policy-rc.d
@@ -101,6 +102,10 @@ apt-get update
 #apt-get install -y blueman:arm64
 #rm -f /usr/sbin/policy-rc.d
 fi
+
+#---------------power management --------------
+apt-get install -y pm-utils triggerhappy
+cp /etc/Powermanager/triggerhappy.service  /lib/systemd/system/triggerhappy.service
 
 #---------------conflict workaround --------------
 # The package xserver-xorg-input-evdev is removed from the base system.
