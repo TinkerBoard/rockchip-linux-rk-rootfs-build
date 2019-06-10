@@ -12,7 +12,7 @@ select_test_item()
 	echo
 	echo "0. (Default) All"
 	echo "1. CPU stress test"
-	echo "2. NPU stress test (not ready)"
+	echo "2. NPU stress test"
 	echo "3. GPU stress test"
 	echo "4. DDR stress test"
 	echo "5. eMMC stress test"
@@ -36,7 +36,12 @@ cpu_freq_stress_test()
 
 npu_test()
 {
-	echo
+	ProcNum=$(ps aux | grep npu_transfer_proxy | grep -v 'grep' | wc -l)
+	if [ "$ProcNum" == 0 ]; then
+            echo "Start npu_transfer_proxy"
+	    sudo /usr/bin/npu_transfer_proxy &
+	fi
+	bash $path/rockchip_test/npu_stress.sh
 }
 
 gpu_test()
@@ -124,7 +129,7 @@ case $test_item in
 		logfile="$path/$now"_BurnIn.txt
 		info_view BurnIn
 		cpu_freq_stress_test
-		npu_test
+		npu_test > /dev/null 2>&1 &
 		gpu_test
 		ddr_test
 		emmc_stress_test > /dev/null 2>&1 &

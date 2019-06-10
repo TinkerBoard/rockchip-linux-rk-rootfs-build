@@ -1,0 +1,10 @@
+#!/bin/bash
+
+path=$(pwd)
+path="$path/rockchip_test/src/npu_burnin_test.py"
+#echo "npu_stress : $path"
+
+while [ 1 != 2 ]
+do
+  python3 $path
+done
