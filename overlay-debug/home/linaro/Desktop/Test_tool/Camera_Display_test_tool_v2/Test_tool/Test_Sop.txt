@@ -1,0 +1,54 @@
+Debian 0.0.1~0.0.5 -> Camera&Display_test_tool
+Debian 0.0.6 -> Camera_Display_test_tool_v2
+從Debian0.0.6 更新testtool為v2，Script內容: CSI-1 (imx219) camera的device node  /dev/video4改為 /dev/video5
+
+測試Script 螢幕保持恆亮: menu ->Preferences -> PowerManager -> Display -> 取消勾選Handle display power management、 Bland after > Never
+Display_Test :
+
+	執行Script需在TinkerBoard Terminal內執行
+	步驟:
+		1.切換到執行script 路徑下
+		  $cd /home/linaro/Desktop/Test_tool/Camera_Display_test_tool_v2/Test_tool/
+		2.run script as root
+		  $sudo ./Display_Test
+		3.stop script
+		  切換到terminal ctrl+c
+
+
+
+Record_Test:
+
+	Script執行流程:
+	1.PreviewTest，前置測試錄影，測試成功會會在終端機或(/tmp/Record_TestResult.txt)上看到Preview Test Success!
+	2.測試成功後開始依照設定錄影時數錄影
+	3.錄製完影片存放路徑:/tmp/Record_"number".avi
+
+	Script使用方法:
+	執行Script時可加兩個參數，第一個參數必須設定，第二個參數可以不設定
+	1.第一個參數為(c0,c1)設置連接對應的camera device，Tinker Board HDMI擺放在右上角，右邊為OV5647 camera設置參數(c0)，左邊為MX219 camera設置參數(c1)
+	2.第二個參數為錄影時數，也可以不加預設為12小時，錄製完影片存放路徑:/tmp/Record_"number".avi
+	步驟:
+		1.切換到執行script 路徑下
+		  $cd /home/linaro/Desktop/Test_tool/Camera_Display_test_tool_v2/Test_tool/
+		2.run script as root
+		  使用OV5647 device錄影，設定預設錄製時數12hr EX: $sudo ./Record_Test.sh c0
+		  使用MX219 device錄影，設定預設錄製時數5hr   EX: $sudo ./Record_Test.sh c1 5
+
+
+
+Capture_Test:
+
+	Script執行流程:
+	1.PreviewTest，前置測試拍照，測試成功會會在終端機或(/tmp/Record_TestResult.txt)上看到Preview Test Success!
+	2.測試成功後開始依照設定拍照時數，每十秒拍一張照片，拍到設定拍照時數結束為止
+	3.拍照完影片存放路徑:/tmp/Capture__"number".avi
+
+    Script使用方法:
+	執行Script時可加兩個參數，第一個參數必須設定，第二個參數可以不設定
+	1.第一個參數為(c0,c1)設置連接對應的camera device，Tinker Board HDMI擺放在右上角，右邊為OV5647 camera設置參數(c0)，左邊為MX219 camera設置參數(c1)
+	2.第二個參數為拍照時數，也可以不加預設為12小時
+		1.切換到執行script 路徑下
+		  $cd /home/linaro/Desktop/Test_tool/Camera_Display_test_tool_v2/Test_tool/
+		2.run script as root
+		  使用OV5647 device拍照，設定預設拍照時數12hr EX: $sudo ./Capture_Test.sh c0
+		  使用MX219 camera拍照，設定預設拍照時數5hr   EX: $sudo ./Capture_Test.sh c1 5
