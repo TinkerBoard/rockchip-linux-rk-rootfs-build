@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version=1.1
+version=1.2
 
 select_test_item()
 {

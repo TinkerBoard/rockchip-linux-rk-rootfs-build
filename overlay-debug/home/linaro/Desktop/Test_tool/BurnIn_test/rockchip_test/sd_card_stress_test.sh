@@ -10,6 +10,17 @@ if [ -z $sd_path ]; then
 	exit
 fi
 
+umount /dev/mmcblk0
+rm -rf /media/linaro/sd
+mkdir /media/linaro/sd
+mount -o rw /dev/mmcblk0 /media/linaro/sd
+sd_path=$(grep mmcblk0 /proc/mounts | cut -d ' ' -f 2)
+
+if [ $sd_path != "/media/linaro/sd"]; then
+	echo SD card mount fail, exit test!!
+	exit
+fi
+
 src=/$sd_path/src
 dest=/$sd_path/dest
 emmc_src="$1/rockchip_test/src"
