@@ -1,14 +1,14 @@
 #!/bin/bash
 
-version=1.1
+version=1.2
 
 select_test_item()
 {
-	echo "*******************************************"
+	echo "************************************************************"
 	echo
-	echo                "System Test tool v_$version"
+	echo "         Tinker Edge R System Test tool v_$version"
 	echo
-	echo "*******************************************"
+	echo "************************************************************"
 	echo
 	echo "1. Start shutdown test"
 	echo "2. Start reboot test"
@@ -72,8 +72,9 @@ case $test_item in
 	3)
 		info_view Suspend
 		times=0
+		sudo npu_powerctrl -d
 		while true; do
-			sleep 5
+			sleep 10
 			sudo bash $path/suspend_test.sh
 			sleep 5
 			((times+=1))
