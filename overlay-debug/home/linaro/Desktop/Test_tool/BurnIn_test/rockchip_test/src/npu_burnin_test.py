@@ -33,7 +33,7 @@ if __name__ == '__main__':
 
     # pre-process config
     #print('--> config model')
-    rknn.config(channel_mean_value='103.94 116.78 123.68 58.82', reorder_channel='0 1 2')
+    #rknn.config(channel_mean_value='103.94 116.78 123.68 58.82', reorder_channel='0 1 2')
     #print('done')
 
     # Load rknn model
@@ -60,23 +60,27 @@ if __name__ == '__main__':
     sdk_version = rknn.get_sdk_version()
     print(sdk_version)
 
-    # Inference
-    #print('--> Running model')
-    outputs = rknn.inference(inputs=[img])
-    show_outputs(outputs)
-    #print('done')
+    test_num = 0
 
-    # perf
-    #print('--> Begin evaluate model performance')
-    perf_results = rknn.eval_perf(inputs=[img])
-    #print('done')
+    while True:
+        npu_open = open(file_name, 'w+')
+        test_num = test_num + 1
+        print("---------------" + str(test_num) + "---------------")
 
-    npu_open = open(file_name, 'a')
-    now = time.strftime("%H:%M:%S")
-    for item1,time in perf_results.items():
-        write_str = now + " > " + str(time) + " uS\n"
-        npu_open.write(write_str)
+        # Inference
+        #print('--> Running model')
+        outputs = rknn.inference(inputs=[img])
+        show_outputs(outputs)
+        #print('done')
+
+        # perf
+        #print('--> Begin evaluate model performance')
+        perf_results = rknn.eval_perf(inputs=[img])
+        #print('done')
+
+        for item1,time in perf_results.items():
+            write_str = str(test_num) + ": " + str(time) + " uS\n"
+            npu_open.write(write_str)
 
     rknn.release()
     npu_open.close()
-
