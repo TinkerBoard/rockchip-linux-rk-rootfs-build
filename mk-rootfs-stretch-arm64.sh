@@ -200,6 +200,10 @@ fi
 ln -s /usr/lib/aarch64-linux-gnu/libGLESv2.so /usr/lib/chromium/libGLESv2.so
 ln -s /usr/lib/aarch64-linux-gnu/libEGL.so /usr/lib/chromium/libEGL.so
 
+#-------------blueman--------------
+bash /etc/init.d/blueman.sh
+rm /etc/init.d/blueman.sh
+
 echo $VERSION_NUMBER-$VERSION > /etc/version
 
 #---------------Clean-------------- 
