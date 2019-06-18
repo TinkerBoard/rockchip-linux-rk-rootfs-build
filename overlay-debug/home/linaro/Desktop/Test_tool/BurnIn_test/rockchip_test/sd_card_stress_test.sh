@@ -4,19 +4,19 @@
 #read -p "input destination path:" dest
 
 sd_path=$(grep mmcblk0 /proc/mounts | cut -d ' ' -f 2)
-
+dev_name=$(grep mmcblk0 /proc/mounts | cut -d ' ' -f 1)
 if [ -z $sd_path ]; then
 	echo SD card not detect, exit test!!
 	exit
 fi
 
-umount /dev/mmcblk0
+umount "$dev_name"
 rm -rf /media/linaro/sd
 mkdir /media/linaro/sd
-mount -o rw /dev/mmcblk0 /media/linaro/sd
+mount -o rw "$dev_name" /media/linaro/sd
 sd_path=$(grep mmcblk0 /proc/mounts | cut -d ' ' -f 2)
 
-if [ $sd_path != "/media/linaro/sd"]; then
+if [ $sd_path != "/media/linaro/sd" ]; then
 	echo SD card mount fail, exit test!!
 	exit
 fi
