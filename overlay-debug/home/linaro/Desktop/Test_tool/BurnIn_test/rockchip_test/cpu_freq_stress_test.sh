@@ -10,23 +10,11 @@ echo "means cpu_freq_test.sh will run 1 hour and every cpu frequency stay 10s"
 echo "test will run $1 seconds"
 echo "every cpu frqeucny will stay $2 seconds"
 
-#disalbe thermal
-if [ -e /sys/class/thermal/thermal_zone0 ]; then
-  echo user_space >/sys/class/thermal/thermal_zone0/policy
-fi
-
-if [ -e /sys/class/thermal/thermal_zone1 ]; then
-  echo user_space > /sys/class/thermal/thermal_zone1/policy
-fi
-
 #caculate how many cpu core
 cpu_cnt=`cat /proc/cpuinfo | grep processor | sort | uniq | wc -l`
 
-echo performance > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
-echo performance > /sys/devices/system/cpu/cpu4/cpufreq/scaling_governor
-
 #stressapptest -s $1 --pause_delay 10 --pause_duration 1 -W --stop_on_errors -M 128&
-stressapptest -s $1 --pause_delay 30 --pause_duration 1 -W --stop_on_errors  -M 128&
+stressapptest -s $1 --pause_delay 600 --pause_duration 1 -W --stop_on_errors  -M 128&
 
 exit 0
 

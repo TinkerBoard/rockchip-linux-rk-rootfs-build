@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version=1.2
+version=1.3
 
 select_test_item()
 {
@@ -27,6 +27,11 @@ info_view()
 	echo "          $1 stress test start"
 	echo
 	echo "*******************************************"
+}
+
+high_performance()
+{
+	sudo bash $path/rockchip_test/high_performance.sh > /dev/null 2>&1
 }
 
 cpu_freq_stress_test()
@@ -77,12 +82,14 @@ if [ $1 ]; then
 	source=win
 else
 	select_test_item
-	path=$(pwd)
+	SCRIPT=`realpath $0`
+	path=`dirname $SCRIPT`
 	source=linux
 	chmod 755 $path/rockchip_test/*.sh
 fi
 
 now="$(date +'%Y%m%d_%H%M')"
+high_performance
 
 case $test_item in
 	1)

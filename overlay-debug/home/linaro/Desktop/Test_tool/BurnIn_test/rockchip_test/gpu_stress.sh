@@ -1,14 +1,5 @@
 #!/bin/sh
 
-echo "performance" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
-echo "performance" > /sys/devices/system/cpu/cpu1/cpufreq/scaling_governor
-echo "performance" > /sys/devices/system/cpu/cpu2/cpufreq/scaling_governor
-echo "performance" > /sys/devices/system/cpu/cpu3/cpufreq/scaling_governor
-echo "performance" > /sys/devices/system/cpu/cpu4/cpufreq/scaling_governor
-echo "performance" > /sys/devices/system/cpu/cpu5/cpufreq/scaling_governor
-
-echo "performance" > /sys/class/devfreq/ff9a0000.gpu/governor
-
 if [ $1 == "win" ]; then
 	#stop lightdm which uses xserver
 	systemctl stop lightdm
