@@ -161,7 +161,7 @@ while true; do
 	cur_freq4=$(echo "scale=2; $cur_freq4/1000000" | bc)
 	gpu_freq=`cat /sys/class/devfreq/ff9a0000.gpu/cur_freq`
 	gpu_freq=$(echo "scale=2; $gpu_freq/1000000" | bc)
-	ddr_freq=`cat /sys/class/devfreq/dmc/cur_freq`
+	ddr_freq=$(sudo cat /sys/kernel/debug/clk/clk_summary | grep sclk_ddrc | awk '{print $4}')
 	ddr_freq=$(echo "scale=2; $ddr_freq/1000000" | bc)
 
 	echo | tee -a $logfile
