@@ -175,7 +175,7 @@ fi
 #apt-get install -y libsdl2-2.0-0:arm64 libcdio-paranoia1:arm64 libjs-bootstrap:arm64 libjs-jquery:arm64
 #fi
 
-#dpkg -i  /packages/others/ffmpeg/*
+dpkg -i  /packages/others/ffmpeg/*
 #---------MPV---------
 dpkg -i  /packages/others/mpv/*
 apt-get install -f -y
