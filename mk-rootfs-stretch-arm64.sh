@@ -10,7 +10,6 @@ fi
 if [ ! $ARCH ]; then
 	ARCH='arm64'
 fi
-
 if [ ! $VERSION ]; then
 	VERSION="debug"
 fi
@@ -89,11 +88,19 @@ chmod o+x /usr/lib/dbus-1.0/dbus-daemon-launch-helper
 
 if [ "$PACKAGE" == "local" ]; then
 #dpkg -i -G -B /packages/packages-local/*.deb
-dpkg -i /packages/local_packages/*.deb
+dpkg -i /packages/local_packages/debian/*.deb
+
+# For NPU
+#pip3 install --no-deps --no-index /packages/local_packages/python/*.whl
+#pip3 install --no-deps --no-index --find-links=/packages/local_packages/python/ /packages/rknn/tensorflow-1.11.0-cp35-none-linux_aarch64.whl /packages/rknn/opencv_python_headless-4.0.1.23-cp35-cp35m-linux_aarch64.whl /packages/rknn/rknn_toolkit-1.0.3b1-cp35-cp35m-linux_aarch64.whl
 fi
 
-if [ "$PACKAGE" == "update" ]; then
+if [ "$PACKAGE" == "debian" ] || [ "$PACKAGE" == "python" ] ; then
 apt-get update
+
+# For NPU SDK
+#apt-get build-dep -y python3-h5py
+
 # The package lxpolkit is included in the base system.
 #apt-get install -y lxpolkit
 # The package blueman is included in the base system.
@@ -103,6 +110,15 @@ apt-get update
 #apt-get install -y blueman:arm64
 #rm -f /usr/sbin/policy-rc.d
 fi
+
+#if [ "$PACKAGE" == "python" ]; then
+# For NPU SDK
+#pip3 install wheel
+#pip3 install setuptools
+# Upgrade numpy for building scipy
+#pip3 install --upgrade numpy
+#pip3 wheel --wheel-dir=/var/cache/python/ /packages/rknn/tensorflow-1.11.0-cp35-none-linux_aarch64.whl /packages/rknn/opencv_python_headless-4.0.1.23-cp35-cp35m-linux_aarch64.whl /packages/rknn/rknn_toolkit-1.0.3b1-cp35-cp35m-linux_aarch64.whl
+#fi
 
 #---------------power management --------------
 # The following packages are included in the base system.
@@ -120,27 +136,24 @@ cp /etc/Powermanager/triggerhappy.service  /lib/systemd/system/triggerhappy.serv
 echo -e "\033[36m Setup Xserver.................... \033[0m"
 dpkg -i  /packages/xserver/*
 
-if [ "$PACKAGE" == "update" ]; then
+if [ "$PACKAGE" == "debian" ]; then
 apt-get install -f -y
 fi
 
-+#---------------Audio-----------------------
+#---------------Audio-----------------------
 chmod 755 /etc/audio/auto_audio_switch.sh
 chmod 666 /etc/audio/audio.conf
 
 #---------------Video--------------
 echo -e "\033[36m Setup Video.................... \033[0m"
-
 # The following packages are included in the base system.
-#if [ "$PACKAGE" == "update" ]; then
 #apt-get install -y gstreamer1.0-plugins-base gstreamer1.0-tools gstreamer1.0-alsa \
 #	gstreamer1.0-plugins-good  gstreamer1.0-plugins-bad alsa-utils
-#fi
 
 dpkg -i  /packages/video/mpp/*.deb
 dpkg -i  /packages/video/gstreamer/*.deb
 
-if [ "$PACKAGE" == "update" ]; then
+if [ "$PACKAGE" == "debian" ]; then
 apt-get install -f -y
 fi
 
@@ -153,14 +166,12 @@ dpkg -l | grep lxde
 if [ "$?" -eq 0 ]; then
         # The following packages are included in the base system.
 	# if target is base, we won't install qt
-	#if [ "$PACKAGE" == "update" ]; then
 	#apt-get install -y libqt5opengl5 libqt5qml5 libqt5quick5 libqt5widgets5 libqt5gui5 libqt5core5a qml-module-qtquick2 \
 	#	libqt5multimedia5 libqt5multimedia5-plugins libqt5multimediaquick-p5
-	#fi
 
 	dpkg -i  /packages/video/qt/*
 
-	if [ "$PACKAGE" == "update" ]; then
+	if [ "$PACKAGE" == "debian" ]; then
 	apt-get install -f -y
 	fi
 else
@@ -172,11 +183,9 @@ fi
 dpkg -i  /packages/others/camera/*
 
 #---------FFmpeg---------
-# The following packages are included in the base system.
-#if [ "$PACKAGE" == "update" ]; then
 #-----TODO: it will cause crash with online video on chromium---------
+# The following packages are included in the base system.
 #apt-get install -y libsdl2-2.0-0:arm64 libcdio-paranoia1:arm64 libjs-bootstrap:arm64 libjs-jquery:arm64
-#fi
 
 dpkg -i  /packages/others/ffmpeg/*
 #---------MPV---------
