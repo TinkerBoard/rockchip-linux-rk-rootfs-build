@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version=1.2
+version=1.3
 
 select_test_item()
 {
@@ -72,7 +72,6 @@ case $test_item in
 	3)
 		info_view Suspend
 		times=0
-		sudo npu_powerctrl -d
 		while true; do
 			sleep 10
 			sudo bash $path/suspend_test.sh
