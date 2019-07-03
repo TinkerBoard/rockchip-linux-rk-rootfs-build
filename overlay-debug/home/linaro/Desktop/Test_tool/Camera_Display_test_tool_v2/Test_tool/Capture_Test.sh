@@ -50,19 +50,22 @@ fi
 if [ ! -n "$2" ];then
 	echo -e "Set to default capture time: 12 hr(s)" | tee -a $ResultFile
 	time=$((12*360))
+elif [ "$2" == "0" ]; then
+	echo -e "Take single shot" | tee -a $ResultFile
+	time=$((1))
 else
 	echo -e "Set to default catpture time: $2 hr(s)" | tee -a $ResultFile
 	time=$(($2*360))
 fi
 
 echo -e "Start Preview Capture Test!" | tee -a $ResultFile
-Preview_Test
+# Preview_Test
 
 echo -e "Start Capture Test!" | tee -a $ResultFile
 while [ $i != $time ]; do
     i=$(($i+1))
 	#gst-launch-1.0 v4l2src device=$dev num-buffers=10 ! video/x-raw,format=NV12,width=1920,height=1080, framerate=30/1 ! jpegenc ! multifilesink location=/tmp/Capture.jpg &
-	gst-launch-1.0 v4l2src device=$dev num-buffers=10 ! video/x-raw,format=NV12,width=1920,height=1080, framerate=30/1 ! jpegenc ! multifilesink location=/tmp/Capture_$i.jpg &
+	gst-launch-1.0 rkv4l2src device=$dev num-buffers=10 ! video/x-raw,format=NV12,width=1920,height=1080, framerate=30/1 ! jpegenc ! multifilesink location=/tmp/Capture_$i.jpg &
 	#echo -e "$(date): Camera capture $i time(s)" | tee -a $ResultFile
 	sleep 10
 

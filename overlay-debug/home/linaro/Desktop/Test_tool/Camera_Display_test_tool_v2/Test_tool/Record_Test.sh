@@ -73,13 +73,13 @@ else
 fi
 
 echo -e "Start Preview Record Test!" | tee -a $ResultFile
-Preview_Test
+# Preview_Test
 
 echo -e "Start Record Test!" | tee -a $ResultFile
 while [ $i != $time ]; do
 	i=$(($i+1))
 	#gst-launch-1.0 v4l2src device=$dev ! video/x-raw,width=1920,height=1080,framerate=30/1 ! videoconvert ! tee name="splitter" ! queue ! kmssink sync=false splitter. ! queue ! mpph264enc ! avimux ! filesink location=/tmp/Record.avi &
-	gst-launch-1.0 v4l2src device=$dev ! video/x-raw,width=1920,height=1080,framerate=30/1 ! videoconvert ! tee name="splitter" ! queue ! kmssink sync=false splitter. ! queue ! mpph264enc ! avimux ! filesink location=/tmp/Record_$i.avi &
+	gst-launch-1.0 rkv4l2src device=$dev ! video/x-raw,width=1920,height=1080,framerate=30/1 ! videoconvert ! tee name="splitter" ! queue ! kmssink sync=false splitter. ! queue ! mpph264enc ! avimux ! filesink location=/tmp/Record_$i.avi &
 	var=$!
 	sleep 1h
 	kill -9 $var
