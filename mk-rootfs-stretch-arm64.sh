@@ -90,16 +90,15 @@ if [ "$PACKAGE" == "local" ]; then
 #dpkg -i -G -B /packages/packages-local/*.deb
 dpkg -i /packages/local_packages/debian/*.deb
 
-# For NPU
-#pip3 install --no-deps --no-index /packages/local_packages/python/*.whl
-#pip3 install --no-deps --no-index --find-links=/packages/local_packages/python/ /packages/rknn/tensorflow-1.11.0-cp35-none-linux_aarch64.whl /packages/rknn/opencv_python_headless-4.0.1.23-cp35-cp35m-linux_aarch64.whl /packages/rknn/rknn_toolkit-1.0.3b1-cp35-cp35m-linux_aarch64.whl
+# For NPU SDK
+pip3 install --no-deps --no-index /packages/local_packages/python/*.whl
 fi
 
 if [ "$PACKAGE" == "debian" ] || [ "$PACKAGE" == "python" ] ; then
 apt-get update
 
 # For NPU SDK
-#apt-get build-dep -y python3-h5py
+apt-get build-dep -y python3-h5py
 
 # The package lxpolkit is included in the base system.
 #apt-get install -y lxpolkit
@@ -111,14 +110,13 @@ apt-get update
 #rm -f /usr/sbin/policy-rc.d
 fi
 
-#if [ "$PACKAGE" == "python" ]; then
+if [ "$PACKAGE" == "python" ]; then
 # For NPU SDK
-#pip3 install wheel
-#pip3 install setuptools
+pip3 install wheel setuptools
 # Upgrade numpy for building scipy
-#pip3 install --upgrade numpy
-#pip3 wheel --wheel-dir=/var/cache/python/ /packages/rknn/tensorflow-1.11.0-cp35-none-linux_aarch64.whl /packages/rknn/opencv_python_headless-4.0.1.23-cp35-cp35m-linux_aarch64.whl /packages/rknn/rknn_toolkit-1.0.3b1-cp35-cp35m-linux_aarch64.whl
-#fi
+pip3 install --upgrade numpy
+pip3 wheel --wheel-dir=/var/cache/python/ /packages/rknn/tensorflow-1.11.0-cp35-none-linux_aarch64.whl /packages/rknn/opencv_python_headless-4.0.1.23-cp35-cp35m-linux_aarch64.whl /packages/rknn/rknn_toolkit-1.0.3b1-cp35-cp35m-linux_aarch64.whl
+fi
 
 #---------------power management --------------
 # The following packages are included in the base system.
