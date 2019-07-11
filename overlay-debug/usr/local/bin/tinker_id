@@ -1,0 +1,135 @@
+#!/bin/bash
+
+FILEPATH=/sys/devices/platform/ff100000.saradc/iio:device0
+
+function usage {
+    echo "command example:"
+    echo "tinker_id DDR4: get LPDDR4 size"
+    echo "tinker_id DDR3: get LPDDR3 size"
+    echo "tinker_id swid: get Software ID"
+    echo "tinker_id bid:  get Board ID"
+    exit 1
+}
+
+function check {
+    voltage_raw=$1
+    voltage_result=$(echo "$voltage_scale*$voltage_raw" | bc)
+    Vboard_id=5
+
+    if [ $(echo "$voltage_result > 1600" | bc) -eq 1 -a $(echo "$voltage_result < 2000" | bc) -eq 1 ]; then
+        Vboard_id=2
+    fi
+
+    if [ $(echo "$voltage_result > 700" | bc) -eq 1 -a $(echo "$voltage_result < 1100" | bc) -eq 1 ]; then
+        Vboard_id=1
+    fi
+
+    if [ $(echo "$voltage_result < 200" | bc) -eq 1 ]; then
+        Vboard_id=0
+    fi
+
+    return "$Vboard_id"
+}
+
+function unknown {
+    echo "unknown version"
+    exit 1
+}
+
+if [ "$#" -eq 1 ]; then
+    PARA=$1
+    voltage_scale=$(<$FILEPATH/in_voltage_scale)
+
+    case $PARA in
+    DDR4)
+        voltage_raw=$(<$FILEPATH/in_voltage0_raw)
+        check $voltage_raw
+        ret_Vid=$?
+
+        case $ret_Vid in
+        2)
+            echo "2G"
+            ;;
+        1)
+            echo "4G"
+            ;;
+        0)
+            echo "reserve"
+            ;;
+        *)
+            unknown
+            ;;
+        esac
+        exit 1
+        ;;
+    DDR3)
+        voltage_raw=$(<$FILEPATH/in_voltage1_raw)
+        check $voltage_raw
+        ret_Vid=$?
+
+        case $ret_Vid in
+        2)
+            echo "1G"
+            ;;
+        1)
+            echo "2G"
+            ;;
+        0)
+            echo "reserve"
+            ;;
+        *)
+            unknown
+            ;;
+        esac
+        exit 1
+        ;;
+    swid)
+        voltage_raw=$(<$FILEPATH/in_voltage4_raw)
+        check $voltage_raw
+        ret_Vid=$?
+
+        case $ret_Vid in
+        2)
+            echo "reserve"
+            ;;
+        1)
+            echo "reserve"
+            ;;
+        0)
+            echo "reserve"
+            ;;
+        *)
+            echo "reserve"
+            ;;
+        esac
+        exit 1
+        ;;
+    bid)
+        voltage_raw=$(<$FILEPATH/in_voltage5_raw)
+        check $voltage_raw
+        ret_Vid=$?
+
+        case $ret_Vid in
+        2)
+            echo "1.00"
+            ;;
+        1)
+            echo "1.01"
+            ;;
+        0)
+            echo "1.02"
+            ;;
+        *)
+            unknown
+            ;;
+        esac
+        exit 1
+        ;;
+    *)
+        echo "Unsupported parameter"
+        usage
+        ;;
+    esac
+fi
+
+usage
