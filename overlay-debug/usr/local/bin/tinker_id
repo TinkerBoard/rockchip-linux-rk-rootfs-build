@@ -4,8 +4,8 @@ FILEPATH=/sys/devices/platform/ff100000.saradc/iio:device0
 
 function usage {
     echo "command example:"
-    echo "tinker_id DDR4: get LPDDR4 size"
-    echo "tinker_id DDR3: get LPDDR3 size"
+    echo "tinker_id cpu_ddr: get CPU memory size"
+    echo "tinker_id npu_ddr: get NPU memory size"
     echo "tinker_id swid: get Software ID"
     echo "tinker_id bid:  get Board ID"
     exit 1
@@ -41,7 +41,7 @@ if [ "$#" -eq 1 ]; then
     voltage_scale=$(<$FILEPATH/in_voltage_scale)
 
     case $PARA in
-    DDR4)
+    cpu_ddr)
         voltage_raw=$(<$FILEPATH/in_voltage0_raw)
         check $voltage_raw
         ret_Vid=$?
@@ -62,7 +62,7 @@ if [ "$#" -eq 1 ]; then
         esac
         exit 1
         ;;
-    DDR3)
+    npu_ddr)
         voltage_raw=$(<$FILEPATH/in_voltage1_raw)
         check $voltage_raw
         ret_Vid=$?
