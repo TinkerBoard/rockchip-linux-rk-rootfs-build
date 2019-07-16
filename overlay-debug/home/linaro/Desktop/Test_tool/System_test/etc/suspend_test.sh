@@ -1,4 +1,4 @@
 #!/bin/bash
 
-echo +20 > /sys/class/rtc/rtc0/wakealarm
+echo +30 > /sys/class/rtc/rtc0/wakealarm
 pm-suspend

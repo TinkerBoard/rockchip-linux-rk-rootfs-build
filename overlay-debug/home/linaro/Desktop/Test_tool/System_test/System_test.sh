@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version=1.3
+version=1.4
 
 select_test_item()
 {
@@ -73,7 +73,7 @@ case $test_item in
 		info_view Suspend
 		times=0
 		while true; do
-			sleep 10
+			sleep 25
 			sudo bash $path/suspend_test.sh
 			sleep 5
 			((times+=1))
