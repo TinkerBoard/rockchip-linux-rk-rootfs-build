@@ -72,8 +72,9 @@ case $test_item in
 	3)
 		info_view Suspend
 		times=0
+		echo performance | sudo tee $(find /sys/ -name *governor)
 		while true; do
-			sleep 25
+			sleep 10
 			sudo bash $path/suspend_test.sh
 			sleep 5
 			((times+=1))
