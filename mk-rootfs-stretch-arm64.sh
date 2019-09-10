@@ -203,6 +203,7 @@ systemctl enable rockchip.service
 systemctl mask systemd-networkd-wait-online.service
 systemctl mask NetworkManager-wait-online.service
 rm /lib/systemd/system/wpa_supplicant@.service
+cp /etc/Powermanager/systemd-suspend.service  /lib/systemd/system/systemd-suspend.service
 
 if [ "$VERSION" == "debug" ] || [ "$VERSION" == "jenkins" ] ; then
 	systemctl enable test.service
