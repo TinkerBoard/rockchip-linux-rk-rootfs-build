@@ -186,6 +186,9 @@ systemctl mask systemd-networkd-wait-online.service
 systemctl mask NetworkManager-wait-online.service
 rm /lib/systemd/system/wpa_supplicant@.service
 
+#-------------mount partition p7--------------
+systemctl enable mountboot.service
+
 #---------------Clean--------------
 rm -rf /var/lib/apt/lists/*
 
