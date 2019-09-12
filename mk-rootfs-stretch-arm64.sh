@@ -208,6 +208,10 @@ cp /etc/Powermanager/systemd-suspend.service  /lib/systemd/system/systemd-suspen
 if [ "$VERSION" == "debug" ] || [ "$VERSION" == "jenkins" ] ; then
 	systemctl enable test.service
 fi
+
+#-------------mount partition p7--------------
+systemctl enable mountboot.service
+
 #---------------get accelerated back for chromium v61--------------
 ln -s /usr/lib/aarch64-linux-gnu/libGLESv2.so /usr/lib/chromium/libGLESv2.so
 ln -s /usr/lib/aarch64-linux-gnu/libEGL.so /usr/lib/chromium/libEGL.so
