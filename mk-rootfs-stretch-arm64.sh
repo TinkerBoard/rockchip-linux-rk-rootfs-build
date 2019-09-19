@@ -216,6 +216,9 @@ ln -s /usr/lib/aarch64-linux-gnu/libEGL.so /usr/lib/chromium/libEGL.so
 bash /etc/init.d/blueman.sh
 rm /etc/init.d/blueman.sh
 
+#-------------Set cpu default interactive---------------
+rm /etc/init.d/cpufrequtils
+
 echo $VERSION_NUMBER-$VERSION > /etc/version
 
 #---------------Clean-------------- 
