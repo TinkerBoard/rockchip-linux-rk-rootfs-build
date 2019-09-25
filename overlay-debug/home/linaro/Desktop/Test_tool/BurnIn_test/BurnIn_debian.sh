@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version=1.3
+version=1.4
 
 select_test_item()
 {
@@ -27,6 +27,13 @@ info_view()
 	echo "          $1 stress test start"
 	echo
 	echo "*******************************************"
+}
+
+pause(){
+        read -n 1 -p "$*" INP
+        if [ $INP != '' ] ; then
+                echo -ne '\b \n'
+        fi
 }
 
 high_performance()
@@ -99,10 +106,11 @@ case $test_item in
 		cpu_freq_stress_test
 		;;
 	2)
-		check_system_status=true
+		check_system_status=false
 		logfile="$path/$now"_npu.txt
 		info_view NPU
 		npu_test
+		pause 'Test stop, press any key to exit...'
 		;;
 	3)
 		check_system_status=true
