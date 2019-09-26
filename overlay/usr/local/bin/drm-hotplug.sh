@@ -52,4 +52,18 @@ for monitor in $MONITORS_CONNECTED;do
     sudo -u $user xrandr --output $monitor --auto
 done
 
+# Audio : Restart Pulseaudio for HDMI-DP-SOUND
+
+hdmi_status=$(cat /sys/class/drm/card0-HDMI-A-1/status)
+hdmi_dp_status=$(cat /sys/class/drm/card0-DP-1/status)
+
+echo "HDMI_Status=${hdmi_status}"
+echo "HDMI_DP_Status=${hdmi_dp_status}"
+
+if [ "$hdmi_dp_status" = "connected" ] && [ "$hdmi_status" = "disconnected" ]
+then
+    echo "Restart Pulseaudio"
+    sudo -u linaro PULSE_RUNTIME_PATH=/run/user/1000/pulse pulseaudio -k
+fi
+
 exit 0
