@@ -115,7 +115,7 @@ if [ "$PACKAGE" == "python" ]; then
 pip3 install wheel setuptools
 # Upgrade numpy for building scipy
 pip3 install --upgrade numpy
-pip3 wheel --wheel-dir=/var/cache/python/ /packages/rknn/tensorflow-1.11.0-cp35-none-linux_aarch64.whl /packages/rknn/opencv_python_headless-4.0.1.23-cp35-cp35m-linux_aarch64.whl /packages/rknn/rknn_toolkit-1.0.3b1-cp35-cp35m-linux_aarch64.whl
+pip3 wheel --wheel-dir=/var/cache/python/ /packages/rknn/tensorflow-1.11.0-cp35-none-linux_aarch64.whl /packages/rknn/opencv_python-4.1.1.26-cp35-cp35m-linux_aarch64.whl /packages/rknn/rknn_toolkit-1.0.3b1-cp35-cp35m-linux_aarch64.whl
 fi
 
 #---------------power management --------------

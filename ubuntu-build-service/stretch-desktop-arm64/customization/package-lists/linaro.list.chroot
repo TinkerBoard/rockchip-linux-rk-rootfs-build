@@ -94,6 +94,8 @@ libjs-jquery
 liblapack-dev
 libnotify-bin
 libprotobuf-dev
+libqtgui4
+libqt4-test
 libqt5core5a
 libqt5gui5
 libqt5multimedia5
