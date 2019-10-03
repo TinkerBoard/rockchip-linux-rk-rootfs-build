@@ -10,7 +10,7 @@ if [ "$?" == "0" ]; then
 	echo "########## Shutdown device from test_shutdown.sh ##########"
 	((times+=1))
 	echo "shutdown_times = "$times > /etc/shutdown_times.txt
-	echo +20 > /sys/class/rtc/rtc0/wakealarm
+	echo +40 > /sys/class/rtc/rtc0/wakealarm
 	systemctl poweroff
 else
 	echo "Detect wrong debian version."
