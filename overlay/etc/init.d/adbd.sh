@@ -51,16 +51,16 @@ parameter_init()
 			PID=0x0000
 			;;
 		mtp)
-			PID=0x0001
+			PID=0x7772
 			;;
 		adb)
-			PID=0x0006
+			PID=0x7770
 			;;
 		mtp_adb | adb_mtp)
-			PID=0x0011
+			PID=0x7773
 			;;
 		ums_adb | adb_ums)
-			PID=0x0018
+			PID=0x7770
 			;;
 		*)
 			PID=0x0019
@@ -70,12 +70,12 @@ parameter_init()
 configfs_init()
 {
 	mkdir -p /sys/kernel/config/usb_gadget/rockchip -m 0770
-	echo 0x2207 > /sys/kernel/config/usb_gadget/rockchip/idVendor
+	echo 0x0b05 > /sys/kernel/config/usb_gadget/rockchip/idVendor
 	echo $PID > /sys/kernel/config/usb_gadget/rockchip/idProduct
 	mkdir -p /sys/kernel/config/usb_gadget/rockchip/strings/0x409 -m 0770
 	echo "0123456789ABCDEF" > /sys/kernel/config/usb_gadget/rockchip/strings/0x409/serialnumber
-	echo "rockchip"  > /sys/kernel/config/usb_gadget/rockchip/strings/0x409/manufacturer
-	echo "rk3xxx"  > /sys/kernel/config/usb_gadget/rockchip/strings/0x409/product
+	echo "ASUS"  > /sys/kernel/config/usb_gadget/rockchip/strings/0x409/manufacturer
+	echo "Tinker Edge R"  > /sys/kernel/config/usb_gadget/rockchip/strings/0x409/product
 	mkdir -p /sys/kernel/config/usb_gadget/rockchip/configs/b.1 -m 0770
 	mkdir -p /sys/kernel/config/usb_gadget/rockchip/configs/b.1/strings/0x409 -m 0770
 	echo 500 > /sys/kernel/config/usb_gadget/rockchip/configs/b.1/MaxPower
