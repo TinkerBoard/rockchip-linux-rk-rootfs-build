@@ -187,7 +187,7 @@ dpkg -i  /packages/others/camera/*
 
 dpkg -i  /packages/others/ffmpeg/*
 #---------MPV---------
-dpkg -i  /packages/others/mpv/*
+#dpkg -i  /packages/others/mpv/*
 apt-get install -f -y
 
 #---------------Debug-------------- 
