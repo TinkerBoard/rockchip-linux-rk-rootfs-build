@@ -8,6 +8,7 @@ acpi-support-base
 adduser
 alsa-utils
 anacron
+android-tools-adb
 apt
 apt-utils
 #babeltrace
@@ -216,4 +217,3 @@ zlib1g-dev
 lxde-common
 desktop-base
 systemd-sysv
-
