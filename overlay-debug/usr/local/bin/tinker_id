@@ -31,6 +31,30 @@ function check {
     return "$Vboard_id"
 }
 
+function check_bid {
+    voltage_raw=$1
+    voltage_result=$(echo "$voltage_scale*$voltage_raw" | bc)
+    Vboard_id=5
+
+    if [ $(echo "$voltage_result > 1700" | bc) -eq 1 -a $(echo "$voltage_result < 1900" | bc) -eq 1 ]; then
+        Vboard_id=3
+    fi
+
+    if [ $(echo "$voltage_result > 1100" | bc) -eq 1 -a $(echo "$voltage_result < 1300" | bc) -eq 1 ]; then
+        Vboard_id=2
+    fi
+
+    if [ $(echo "$voltage_result > 800" | bc) -eq 1 -a $(echo "$voltage_result < 1000" | bc) -eq 1 ]; then
+        Vboard_id=1
+    fi
+
+    if [ $(echo "$voltage_result < 100" | bc) -eq 1 ]; then
+        Vboard_id=0
+    fi
+
+    return "$Vboard_id"
+}
+
 function unknown {
     echo "unknown version"
     exit 1
@@ -106,18 +130,21 @@ if [ "$#" -eq 1 ]; then
         ;;
     bid)
         voltage_raw=$(<$FILEPATH/in_voltage5_raw)
-        check $voltage_raw
+        check_bid $voltage_raw
         ret_Vid=$?
 
         case $ret_Vid in
+        3)
+            echo "1.02"
+            ;;
         2)
-            echo "1.00"
+            echo "1.04"
             ;;
         1)
             echo "1.01"
             ;;
         0)
-            echo "1.02"
+            echo "1.03"
             ;;
         *)
             unknown
