@@ -3,6 +3,7 @@ import time
 import numpy as np
 import cv2
 from rknn.api import RKNN
+from time import sleep
 
 def show_outputs(outputs):
     output = outputs[0][0]
@@ -61,7 +62,7 @@ if __name__ == '__main__':
     print(sdk_version)
 
     test_num = 0
-
+    delay_time = 0.05
     while True:
         npu_open = open(file_name, 'w+')
         test_num = test_num + 1
@@ -75,12 +76,13 @@ if __name__ == '__main__':
 
         # perf
         #print('--> Begin evaluate model performance')
-        perf_results = rknn.eval_perf(inputs=[img])
+        #perf_results = rknn.eval_perf(inputs=[img])
         #print('done')
 
-        for item1,time in perf_results.items():
-            write_str = str(test_num) + ": " + str(time) + " uS\n"
-            npu_open.write(write_str)
+        #for item1,time in perf_results.items():
+        write_str = str(test_num) + "\n"
+        npu_open.write(write_str)
+        sleep(delay_time)
 
     rknn.release()
     npu_open.close()

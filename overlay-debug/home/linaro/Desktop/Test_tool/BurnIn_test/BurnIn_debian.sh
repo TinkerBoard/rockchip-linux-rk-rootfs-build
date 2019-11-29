@@ -50,8 +50,8 @@ npu_test()
 {
 	ProcNum=$(ps aux | grep npu_transfer_proxy | grep -v 'grep' | wc -l)
 	if [ "$ProcNum" == 0 ]; then
-            echo "Start npu_transfer_proxy"
-	    sudo /usr/bin/npu_transfer_proxy &
+		echo "Start npu_transfer_proxy"
+		/usr/bin/npu_transfer_proxy &
 	fi
 	bash $path/rockchip_test/npu_stress.sh
 }
