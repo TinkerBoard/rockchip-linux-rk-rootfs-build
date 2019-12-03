@@ -141,6 +141,7 @@ fi
 #---------------Audio-----------------------
 chmod 755 /etc/audio/auto_audio_switch.sh
 chmod 666 /etc/audio/audio.conf
+chmod 755 /usr/lib/pm-utils/sleep.d/02pulseaudio-suspend
 
 #---------------Video--------------
 echo -e "\033[36m Setup Video.................... \033[0m"
