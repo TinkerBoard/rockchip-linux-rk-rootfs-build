@@ -1,6 +1,12 @@
 #!/bin/bash
 
-version=1.4
+version=1.5
+
+log()
+{
+	echo $1 | tee -a $logfile | sudo tee $logfile2
+	logger -t BurnIn "$1"
+}
 
 select_test_item()
 {
@@ -81,6 +87,36 @@ wifi_stress_test()
 	sudo bash $path/rockchip_test/wifi_stress_test.sh
 }
 
+CPU="stressapptest"
+NPU="npu_stress.sh"
+GPU="glmark2-es2"
+DDR="memtester"
+EMMC="emmc_stress_test.sh"
+SD="sd_card_stress_test.sh"
+Network="network_stress_test.sh"
+
+check_status()
+{
+	Flag=$( ps aux | grep "$2" | grep -v "grep")
+	if [ "$Flag" == ""  ]
+	then
+		log "$1 stress test : stop "
+	else
+		log "$1 stress test : running "
+	fi
+}
+
+check_all_status()
+{
+	check_status CPU $CPU
+	check_status NPU $NPU
+	check_status GPU $GPU
+	check_status DDR $DDR
+	check_status EMMC $EMMC
+	check_status SD $SD
+	check_status Network $Network
+}
+
 check_system_status=false
 
 if [ $1 ]; then
@@ -96,6 +132,7 @@ else
 fi
 
 now="$(date +'%Y%m%d_%H%M')"
+logfile2="/dev/kmsg"
 high_performance
 
 case $test_item in
@@ -172,18 +209,21 @@ while true; do
 	ddr_freq=$(sudo cat /sys/kernel/debug/clk/clk_summary | grep sclk_ddrc | awk '{print $4}')
 	ddr_freq=$(echo "scale=2; $ddr_freq/1000000" | bc)
 
-	echo | tee -a $logfile
-	echo "*******************************************" | tee -a $logfile
-	date | tee -a $logfile
-	echo "CPU Usage		= $cpu_usage" | tee -a $logfile
-	echo "GPU Usage		= $gpu_usage" | tee -a $logfile
-	echo "CPU temp		= $cpu_temp" | tee -a $logfile
-	echo "GPU temp		= $gpu_temp" | tee -a $logfile
-	echo "CPU big core freq	= $cur_freq4 GHz" | tee -a $logfile
-	echo "CPU small core freq	= $cur_freq0 GHz" | tee -a $logfile
-	echo "GPU freq		= $gpu_freq MHz" | tee -a $logfile
-	echo "DDR freq		= $ddr_freq MHz" | tee -a $logfile
-	echo "*******************************************" | tee -a $logfile
-	echo | tee -a $logfile
+	log ""
+	log "============================================"
+	log "$(date)"
+	log "CPU Usage		= $cpu_usage"
+	log "GPU Usage		= $gpu_usage"
+	log "CPU temp		= $cpu_temp"
+	log "GPU temp		= $gpu_temp"
+	log "CPU big core freq	= $cur_freq4 GHz"
+	log "CPU small core freq	= $cur_freq0 GHz"
+	log "GPU freq		= $gpu_freq MHz"
+	log "DDR freq		= $ddr_freq MHz"
+	log ""
+	log "Test Status"
+	check_all_status
+	log "============================================"
+	log ""
 	sleep 6
 done
