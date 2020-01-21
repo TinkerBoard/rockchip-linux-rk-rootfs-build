@@ -3,6 +3,9 @@
 i=0
 ERROR=0
 ResultFile="/tmp/Record_TestResult.txt"
+CSI0="/dev/video0"
+CSI1="/dev/video5"
+
 function Remove_TestResult()
 {
     if [ -f $ResultFile ]; then
@@ -16,76 +19,46 @@ function END()
     exit $ERROR
 }
 
-function Preview_Test()
-{
-	gst-launch-1.0 v4l2src device=$dev ! video/x-raw,width=1920,height=1080,framerate=30/1 ! videoconvert ! tee name="splitter" ! queue ! kmssink sync=false splitter. ! queue ! mpph264enc ! avimux ! filesink location=/tmp/test.avi &
-	var=$!
-	sleep 3
-	process=$(ps -A | grep gst-launch-1.0 | awk '{print $1}' | xargs)
-	if [ $var == $process ];then
-		kill -9 $var
-	fi
-
-	gst-launch-1.0 v4l2src device=$dev ! video/x-raw,width=1920,height=1080,framerate=30/1 ! videoconvert ! tee name="splitter" ! queue ! kmssink sync=false splitter. ! queue ! mpph264enc ! avimux ! filesink location=/tmp/test.avi &
-	var=$!
-	sleep 3
-	process=$(ps -A | grep gst-launch-1.0 | awk '{print $1}' | xargs)
-	if [ $var == $process ];then
-		kill -9 $var
-	else
-		echo -e "gst-launch-1.0 is not running, Preview Test Fail!" | tee -a $ResultFile
-		#echo -e "Please check camera is already connected to the device." | tee -a $ResultFile
-		if [ -f "/tmp/test.avi" ]; then
-			rm -rf /tmp/test.avi
-		fi
-		END
-	fi
-
-	if [ -f "/tmp/test.avi" ]; then
-		echo -e "Preview Test Success!" | tee -a $ResultFile
-		rm -rf /tmp/test.avi
-	fi
-}
-
 systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target
 Remove_TestResult
-
-if [ "$1" == "c0" ];then
-	echo -e "Set to use Camera0 OV5647" | tee -a $ResultFile
-	dev="/dev/video0"
-elif [ "$1" == "c1" ];then
-	echo -e "Set to use Camera1 IMX219" | tee -a $ResultFile
-	dev="/dev/video5"
-else
-	echo -e "Cannot find camera device, please set camera device!" | tee -a $ResultFile
-	echo -e "c0 : OV5647" | tee -a $ResultFile
-	echo -e "c1 : MX219" | tee -a $ResultFile
-	END
-fi
-
-
-if [ ! -n "$2" ];then
-	echo -e "Set to default record time: 12 hr(s)" | tee -a $ResultFile
-	time=$[12*6]
-else
-	echo -e "Set to default record time: $2 hr(s)" | tee -a $ResultFile
-	time=$[$2*6]
-fi
-
-echo $time
-
-#echo -e "Start Preview Record Test!" | tee -a $ResultFile
-# Preview_Test
-
+time=2
 echo -e "Start Record Test!" | tee -a $ResultFile
-while [ $i != $time ]; do
-	i=$(($i+1))
-	#gst-launch-1.0 v4l2src device=$dev ! video/x-raw,width=1920,height=1080,framerate=30/1 ! videoconvert ! tee name="splitter" ! queue ! kmssink sync=false splitter. ! queue ! mpph264enc ! avimux ! filesink location=/tmp/Record.avi &
-	gst-launch-1.0 rkv4l2src device=$dev ! video/x-raw,width=640,height=480,framerate=30/1 ! tee name=t t. ! queue ! kmssink sync=false t. ! queue ! videorate ! video/x-raw,width=640,height=480,framerate=30/1 ! mpph264enc ! queue ! h264parse ! avimux ! filesink location=/tmp/Record_$i.avi &
-	var=$!
-	sleep 600
-	kill -9 $var
-	echo -e "$(date): Camera record Record_$i.avi" | tee -a $ResultFile
-done
+
+gst-launch-1.0 rkv4l2src device=$CSI0 ! video/x-raw,width=640,height=480,framerate=30/1 ! tee name=t t. ! queue ! kmssink sync=false t. ! queue ! videorate ! video/x-raw,width=640,height=480,framerate=30/1 ! mpph264enc ! queue ! h264parse ! avimux ! filesink location=/tmp/Record_OV5647_480p.avi &
+var=$!
+sleep 60
+kill -9 $var
+echo -e "$(date): Camera record Record_ov5647_480p.avi" | tee -a $ResultFile
+
+gst-launch-1.0 rkv4l2src device=$CSI0 ! video/x-raw,width=1280,height=720,framerate=30/1 ! tee name=t t. ! queue ! kmssink sync=false t. ! queue ! videorate ! video/x-raw,width=1280,height=720,framerate=30/1 ! mpph264enc ! queue ! h264parse ! avimux ! filesink location=/tmp/Record_OV5647_720p.avi &
+var=$!
+sleep 60
+kill -9 $var
+echo -e "$(date): Camera record Record_ov5647_720p.avi" | tee -a $ResultFile
+
+gst-launch-1.0 rkv4l2src device=$CSI0 ! video/x-raw,width=1920,height=1088,framerate=30/1 ! tee name=t t. ! queue ! kmssink sync=false t. ! queue ! videorate ! video/x-raw,width=1920,height=1088,framerate=30/1 ! mpph264enc ! queue ! h264parse ! avimux ! filesink location=/tmp/Record_OV5647_1080p.avi &
+var=$!
+sleep 60
+kill -9 $var
+echo -e "$(date): Camera record Record_ov5647_1080p.avi" | tee -a $ResultFile
+
+gst-launch-1.0 rkv4l2src device=$CSI1 ! video/x-raw,width=640,height=480,framerate=30/1 ! tee name=t t. ! queue ! kmssink sync=false t. ! queue ! videorate ! video/x-raw,width=640,height=480,framerate=30/1 ! mpph264enc ! queue ! h264parse ! avimux ! filesink location=/tmp/Record_IMX219_480p.avi &
+var=$!
+sleep 60
+kill -9 $var
+echo -e "$(date): Camera record Record_IMX219_480p.avi" | tee -a $ResultFile
+
+gst-launch-1.0 rkv4l2src device=$CSI1 ! video/x-raw,width=1280,height=720,framerate=30/1 ! tee name=t t. ! queue ! kmssink sync=false t. ! queue ! videorate ! video/x-raw,width=1280,height=720,framerate=30/1 ! mpph264enc ! queue ! h264parse ! avimux ! filesink location=/tmp/Record_IMX219_720p.avi &
+var=$!
+sleep 60
+kill -9 $var
+echo -e "$(date): Camera record Record_IMX219_720p.avi" | tee -a $ResultFile
+
+gst-launch-1.0 rkv4l2src device=$CSI1 ! video/x-raw,width=1920,height=1088,framerate=30/1 ! tee name=t t. ! queue ! kmssink sync=false t. ! queue ! videorate ! video/x-raw,width=1920,height=1088,framerate=30/1 ! mpph264enc ! queue ! h264parse ! avimux ! filesink location=/tmp/Record_IMX219_1080p.avi &
+var=$!
+sleep 60
+kill -9 $var
+echo -e "$(date): Camera record Record_IMX219_1080p.avi" | tee -a $ResultFile
+
 echo -e "Finished Record Test!" | tee -a $ResultFile
 systemctl unmask sleep.target suspend.target hibernate.target hybrid-sleep.target

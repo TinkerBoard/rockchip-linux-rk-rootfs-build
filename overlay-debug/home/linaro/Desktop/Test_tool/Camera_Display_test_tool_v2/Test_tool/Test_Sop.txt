@@ -15,40 +15,20 @@ Display_Test :
 		  切換到terminal ctrl+c
 
 
-
 Record_Test:
 
 	Script執行流程:
-	1.PreviewTest，前置測試錄影，測試成功會會在終端機或(/tmp/Record_TestResult.txt)上看到Preview Test Success!
-	2.測試成功後開始依照設定錄影時數錄影
-	3.錄製完影片存放路徑:/tmp/Record_"number".avi
+		1.錄影測試，會分別對OV5647與IMX219各錄製480p/720p/1080p的檔案，並存至/tmp/底下，檔案約一分鐘
 
 	Script使用方法:
-	執行Script時可加兩個參數，第一個參數必須設定，第二個參數可以不設定
-	1.第一個參數為(c0,c1)設置連接對應的camera device，Tinker Board HDMI擺放在右上角，右邊為OV5647 camera設置參數(c0)，左邊為MX219 camera設置參數(c1)
-	2.第二個參數為錄影時數，也可以不加預設為12小時，錄製完影片存放路徑:/tmp/Record_"number".avi
-	步驟:
-		1.切換到執行script 路徑下
-		  $cd /home/linaro/Desktop/Test_tool/Camera_Display_test_tool_v2/Test_tool/
-		2.run script as root
-		  使用OV5647 device錄影，設定預設錄製時數12hr EX: $sudo ./Record_Test.sh c0
-		  使用MX219 device錄影，設定預設錄製時數5hr   EX: $sudo ./Record_Test.sh c1 5
-
+		$sudo ./Record_Test.sh
 
 
 Capture_Test:
 
 	Script執行流程:
-	1.PreviewTest，前置測試拍照，測試成功會會在終端機或(/tmp/Record_TestResult.txt)上看到Preview Test Success!
-	2.測試成功後開始依照設定拍照時數，每十秒拍一張照片，拍到設定拍照時數結束為止
-	3.拍照完影片存放路徑:/tmp/Capture__"number".avi
+		1.預覽測試，請觀察螢幕上的預覽畫面是否正常
+		2.拍照測試，當Script執行結束後，請檢查/tmp/Capture_ov5647.jpg與/tmp/Capture_imx219.jpg照片是否正常
 
     Script使用方法:
-	執行Script時可加兩個參數，第一個參數必須設定，第二個參數可以不設定
-	1.第一個參數為(c0,c1)設置連接對應的camera device，Tinker Board HDMI擺放在右上角，右邊為OV5647 camera設置參數(c0)，左邊為MX219 camera設置參數(c1)
-	2.第二個參數為拍照時數，也可以不加預設為12小時
-		1.切換到執行script 路徑下
-		  $cd /home/linaro/Desktop/Test_tool/Camera_Display_test_tool_v2/Test_tool/
-		2.run script as root
-		  使用OV5647 device拍照，設定預設拍照時數12hr EX: $sudo ./Capture_Test.sh c0
-		  使用MX219 camera拍照，設定預設拍照時數5hr   EX: $sudo ./Capture_Test.sh c1 5
+		$sudo ./Capture_Test.sh
