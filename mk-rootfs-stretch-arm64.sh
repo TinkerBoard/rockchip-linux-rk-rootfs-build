@@ -72,6 +72,16 @@ sudo cp -rf overlay-debug/usr/local/share/glmark2/aarch64/share/* $TARGET_ROOTFS
 sudo cp overlay-debug/usr/local/share/glmark2/aarch64/bin/glmark2-es2 $TARGET_ROOTFS_DIR/usr/local/bin/glmark2-es2
 fi
 
+# gpio_lib_python and gpio_lib_c for rk3399PRO
+if [ "$ARCH" == "arm64" ]; then
+sudo rm -rf $TARGET_ROOTFS_DIR/usr/local/share/gpio_lib_c_rk3399PRO
+sudo rm -rf $TARGET_ROOTFS_DIR/usr/local/share/gpio_lib_python_rk3399PRO
+sudo rm -rf $TARGET_ROOTFS_DIR/usr/local/share/gpio_lib_scratch
+sudo cp -rf overlay-debug/usr/local/share/gpio_lib_c_rk3399PRO $TARGET_ROOTFS_DIR/usr/local/share/gpio_lib_c_rk3399PRO
+sudo cp -rf overlay-debug/usr/local/share/gpio_lib_python_rk3399PRO $TARGET_ROOTFS_DIR/usr/local/share/gpio_lib_python_rk3399PRO
+sudo cp -rf overlay-debug/usr/local/share/gpio_lib_scratch $TARGET_ROOTFS_DIR/usr/local/share/gpio_lib_scratch
+fi
+
 
 if [ "$VERSION" == "jenkins" ]; then
 	# network
@@ -117,6 +127,20 @@ pip3 install wheel setuptools
 pip3 install --upgrade numpy
 pip3 wheel --wheel-dir=/var/cache/python/ /packages/rknn/tensorflow-1.11.0-cp35-none-linux_aarch64.whl /packages/rknn/opencv_python-4.1.1.26-cp35-cp35m-linux_aarch64.whl /packages/rknn/rknn_toolkit-1.0.3b1-cp35-cp35m-linux_aarch64.whl
 fi
+
+#---------------gpio library --------------
+# For gpio wiring c library
+chmod a+x /usr/local/share/gpio_lib_c_rk3399PRO
+cd /usr/local/share/gpio_lib_c_rk3399PRO
+./build
+# For gpio python library
+cd /usr/local/share/gpio_lib_python_rk3399PRO/
+python setup.py install
+# For gpio python scratch
+cd /usr/local/share/gpio_lib_scratch
+sh ./setup.sh
+cd /
+
 
 #---------------power management --------------
 # The following packages are included in the base system.
