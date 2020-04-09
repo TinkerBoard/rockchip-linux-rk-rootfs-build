@@ -1,7 +1,6 @@
 #!/bin/bash -e
 
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-
 function run_glmark2() {
 if [ "$1" == "rk3288" ]; then
 	su linaro -c "DISPLAY=:0.0 glmark2-es2 --fullscreen"
@@ -21,6 +20,9 @@ elif [[  "$1" == "px30" || "$1" == "rk3326"  ]]; then
 elif [[  "$1" == "rk1808" || "$1" == "rk3308"  ]]; then
 	echo "the chips didn't support gpu"
 
+elif [[  "$1" == "rk3128" ]]; then
+	su linaro -c "DISPLAY=:0.0 glmark2-es2 --fullscreen"
+
 elif [[  "$1" == "px3se"  ]]; then
 	su linaro -c "DISPLAY=:0.0 glmark2-es2 --fullscreen"
 else
@@ -29,24 +31,28 @@ fi
 }
 
 COMPATIBLE=$(cat /proc/device-tree/compatible)
-if [[ $COMPATIBLE =~ "rk3288" ]]; then
+if [[ $(expr $COMPATIBLE : ".*rk3288") -ne 0 ]]; then
     CHIPNAME="rk3288"
-elif [[ $COMPATIBLE =~ "rk3308" ]]; then
+elif [[ $(expr $COMPATIBLE : ".*rk3308") -ne 0 ]]; then
     CHIPNAME="rk3308"
-elif [[ $COMPATIBLE =~ "rk3328" ]]; then
+elif [[ $(expr $COMPATIBLE : ".*rk3328") -ne 0 ]]; then
     CHIPNAME="rk3328"
-elif [[ $COMPATIBLE =~ "rk3399" ]]; then
+elif [[ $(expr $COMPATIBLE : ".*rk3399") -ne 0 ]]; then
     CHIPNAME="rk3399"
-elif [[ $COMPATIBLE =~ "rk3326" ]]; then
+elif [[ $(expr $COMPATIBLE : ".*rk3326") -ne 0 ]]; then
     CHIPNAME="rk3326"
-elif [[ $COMPATIBLE =~ "rk3399" ]]; then
+elif [[ $(expr $COMPATIBLE : ".*rk3399") -ne 0 ]]; then
     CHIPNAME="rk3399"
-elif [[ ($COMPATIBLE =~ "rk3399") && ($COMPATIBLE =~ "rk3399pro")]]; then
-CHIPNAME="rk3399pro"
-elif [[ $COMPATIBLE =~ "rk1808" ]]; then
+elif [[ $(expr $COMPATIBLE : ".*rk3399pro") -ne 0 ]]; then
+    CHIPNAME="rk3399pro"
+elif [[ $(expr $COMPATIBLE : ".*rk1808") -ne 0 ]]; then
     CHIPNAME="rk1808"
-elif [[ $COMPATIBLE =~ "px3se" ]]; then
+elif [[ $(expr $COMPATIBLE : ".*px3se") -ne 0 ]]; then
     CHIPNAME="px3se"
+elif [[ $(expr $COMPATIBLE : ".*px30") -ne 0 ]]; then
+    CHIPNAME="px30"
+elif [[ $(expr $COMPATIBLE : ".*rk3128") -ne 0 ]]; then
+    CHIPNAME="rk3128"
 else
     CHIPNAME="rk3399"
 fi

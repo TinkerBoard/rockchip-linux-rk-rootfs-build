@@ -13,6 +13,7 @@ apt-utils
 #babeltrace
 bc
 bluez
+blueman
 btrfs-tools
 #build-essential
 bzip2
@@ -83,7 +84,8 @@ lsb-release
 lsof
 lxde
 lxlauncher
-lxmusic
+#lxmusic
+lxpolkit
 lxsession-default-apps
 lxsession-logout
 lxshortcut

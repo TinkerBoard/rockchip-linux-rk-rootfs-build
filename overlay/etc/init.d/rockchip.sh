@@ -38,6 +38,9 @@ elif [[  "$1" == "rk3326"  ]]; then
 elif [[  "$1" == "px30"  ]]; then
     dpkg -i  /packages/libmali/libmali-rk-bifrost-g31-*.deb
     dpkg -i  /packages/libmali/libmali-rk-dev_*.deb
+elif [[  "$1" == "rk3128"  ]]; then
+    dpkg -i  /packages/libmali/libmali-rk-utgard-400-*.deb
+    dpkg -i  /packages/libmali/libmali-rk-dev_*.deb
 elif [[  "$1" == "rk3036"  ]]; then
     dpkg -i  /packages/libmali/libmali-rk-utgard-400-*.deb
     dpkg -i  /packages/libmali/libmali-rk-dev_*.deb
@@ -46,6 +49,49 @@ elif [[  "$1" == "rk3036"  ]]; then
     # sed -i -e 's:"SWcursor"              "false":"SWcursor"              "true":' \
     #     -i /etc/X11/xorg.conf.d/20-armsoc.conf
 fi
+if [ -e "/usr/lib/aarch64-linux-gnu" ]; then
+    cd /usr/lib/aarch64-linux-gnu/
+    if [ -e "libEGL.so.1.1.0" ]; then
+        rm libEGL.so.1.1.0
+    elif [ -e "libGLESv2.so.2.0.0" ]; then
+	rm libGLESv2.so.2.0.0
+    elif [ -e "libGLEW.so.2.0.0" ]; then
+	rm libGLEW.so.2.0.0
+    fi
+    ln -sf libMali.so libEGL.so.1.1.0
+    ln -sf libMali.so libEGL.so
+    ln -sf libMali.so libEGL.so.1.0.0
+    ln -sf libMali.so libEGL.so.1.4
+    ln -sf libMali.so libGLESv2.so
+    ln -sf libMali.so libGLESv2.so.2.0
+    ln -sf libMali.so libGLESv2.so.2.0.0
+    ln -sf libMali.so libGLESv1_CM.so
+    ln -sf libMali.so libGLESv1_CM.so.1
+    ln -sf libMali.so libGLESv1_CM.so.1.1
+
+fi
+if [ -e "/usr/lib/arm-linux-gnueabihf" ]; then
+    cd /usr/lib/arm-linux-gnueabihf/
+    if [ -e "libEGL.so.1.1.0" ]; then
+        rm libEGL.so.1.1.0
+    elif [ -e "libGLESv2.so.2.0.0" ]; then
+	rm libGLESv2.so.2.0.0
+    elif [ -e "libGLEW.so.2.0.0" ]; then
+	rm libGLEW.so.2.0.0
+    fi
+
+    ln -sf libMali.so libEGL.so.1.1.0
+    ln -sf libMali.so libEGL.so
+    ln -sf libMali.so libEGL.so.1.0.0
+    ln -sf libMali.so libEGL.so.1.4
+    ln -sf libMali.so libGLESv2.so
+    ln -sf libMali.so libGLESv2.so.2.0
+    ln -sf libMali.so libGLESv2.so.2.0.0
+    ln -sf libMali.so libGLESv1_CM.so
+    ln -sf libMali.so libGLESv1_CM.so.1
+    ln -sf libMali.so libGLESv1_CM.so.1.1
+fi
+
 }
 
 function update_npu_fw() {
@@ -69,6 +115,8 @@ elif [[ $COMPATIBLE =~ "rk3326" ]]; then
     CHIPNAME="rk3326"
 elif [[ $COMPATIBLE =~ "px30" ]]; then
     CHIPNAME="px30"
+elif [[ $COMPATIBLE =~ "rk3128" ]]; then
+    CHIPNAME="rk3128"
 else
     CHIPNAME="rk3036"
 fi
@@ -131,13 +179,13 @@ then
     if [[ "$CHIPNAME" == "rk3399pro" ]];
     then
         mv /etc/Powermanager/01npu /usr/lib/pm-utils/sleep.d/
+        mv /etc/Powermanager/02npu /lib/systemd/system-sleep/
     fi
     mv /etc/Powermanager/triggerhappy /etc/init.d/triggerhappy
 
     rm /etc/Powermanager -rf
     service triggerhappy restart
 fi
-
 
 # read mac-address from efuse
 # if [ "$BOARDNAME" == "rk3288-miniarm" ]; then

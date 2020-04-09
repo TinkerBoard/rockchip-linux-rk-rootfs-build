@@ -16,6 +16,7 @@ bash-completion
 bc
 blueman
 bluez
+blueman
 btrfs-tools
 build-essential
 bzip2
@@ -123,7 +124,7 @@ lshw
 lsof
 lxde
 lxlauncher
-lxmusic
+#lxmusic
 lxpolkit
 lxsession-default-apps
 lxsession-logout
