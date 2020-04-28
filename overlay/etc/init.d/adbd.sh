@@ -89,24 +89,31 @@ parameter_init()
 
 	case "$CONFIG_STRING" in
 		ums)
+			VID=0x2207
 			PID=0x0000
 			;;
 		mtp)
+			VID=0x0b05
 			PID=0x7772
 			;;
 		adb)
+			VID=0x0b05
 			PID=0x7770
 			;;
 		mtp_adb | adb_mtp)
+			VID=0x0b05
 			PID=0x7773
 			;;
 		ums_adb | adb_ums)
-			PID=0x7770
+			VID=0x2207
+			PID=0x0018
 			;;
 		acm)
+			VID=0x2207
 			PID=0x1005
 			;;
 		*)
+			VID=0x2207
 			PID=0x0019
 	esac
 }
@@ -114,7 +121,7 @@ parameter_init()
 configfs_init()
 {
 	mkdir -p ${USB_CONFIGFS_DIR} -m 0770
-	echo 0x2207 > ${USB_CONFIGFS_DIR}/idVendor
+	echo $VID > ${USB_CONFIGFS_DIR}/idVendor
 	echo $PID > ${USB_CONFIGFS_DIR}/idProduct
 	mkdir -p ${USB_STRINGS_DIR}   -m 0770
 
@@ -123,8 +130,8 @@ configfs_init()
 		SERIAL=0123456789ABCDEF
 	fi
 	echo $SERIAL > ${USB_STRINGS_DIR}/serialnumber
-	echo "rockchip"  > ${USB_STRINGS_DIR}/manufacturer
-	echo "rk3xxx"  > ${USB_STRINGS_DIR}/product
+	echo "ASUS"  > ${USB_STRINGS_DIR}/manufacturer
+	echo "Tinker Edge R"  > ${USB_STRINGS_DIR}/product
 	mkdir -p ${USB_CONFIGS_DIR}  -m 0770
 	mkdir -p ${USB_CONFIGS_DIR}/strings/${USB_ATTRIBUTE}  -m 0770
 	echo 500 > ${USB_CONFIGS_DIR}/MaxPower
