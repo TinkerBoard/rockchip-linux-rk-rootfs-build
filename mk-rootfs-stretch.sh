@@ -1,5 +1,10 @@
 #!/bin/bash -e
 
+# Tinker Edge R: Build with local packages by default
+if [ ! $PACKAGE ]; then
+	PACKAGE='local'
+fi
+
 # Directory contains the target rootfs
 TARGET_ROOTFS_DIR="binary"
 
@@ -35,6 +40,22 @@ sudo tar -xpf linaro-stretch-alip-*.tar.gz
 echo -e "\033[36m Copy overlay to rootfs \033[0m"
 sudo mkdir -p $TARGET_ROOTFS_DIR/packages
 sudo cp -rf packages/$ARCH/* $TARGET_ROOTFS_DIR/packages
+
+# Tinker Edge R: Copy local packages
+if [ "$PACKAGE" == "local" ]; then
+	sudo mkdir -p $TARGET_ROOTFS_DIR/packages/local_packages
+	sudo cp -rf local_packages-$VERSION/* $TARGET_ROOTFS_DIR/packages/local_packages
+fi
+
+# Tinker Edge R: gpio_lib_python and gpio_lib_c
+if [ "$ARCH" == "arm64" ]; then
+	sudo rm -rf $TARGET_ROOTFS_DIR/usr/local/share/gpio_lib_c_rk3399PRO
+	sudo rm -rf $TARGET_ROOTFS_DIR/usr/local/share/gpio_lib_python_rk3399PRO
+	sudo rm -rf $TARGET_ROOTFS_DIR/usr/local/share/gpio_lib_scratch
+	sudo cp -rf overlay-debug/usr/local/share/gpio_lib_c_rk3399PRO $TARGET_ROOTFS_DIR/usr/local/share/gpio_lib_c_rk3399PRO
+	sudo cp -rf overlay-debug/usr/local/share/gpio_lib_python_rk3399PRO $TARGET_ROOTFS_DIR/usr/local/share/gpio_lib_python_rk3399PRO
+	sudo cp -rf overlay-debug/usr/local/share/gpio_lib_scratch $TARGET_ROOTFS_DIR/usr/local/share/gpio_lib_scratch
+fi
 
 # copy overlay to target
 sudo cp -rf overlay/* $TARGET_ROOTFS_DIR/
@@ -98,25 +119,72 @@ sudo mount -o bind /dev $TARGET_ROOTFS_DIR/dev
 cat <<EOF | sudo chroot $TARGET_ROOTFS_DIR
 
 chmod o+x /usr/lib/dbus-1.0/dbus-daemon-launch-helper
+
+# Tinker Edge R: Install local packages and wheels
+if [ "$PACKAGE" == "local" ]; then
+	#dpkg -i -G -B /packages/packages-local/*.deb
+	dpkg -i /packages/local_packages/debian/*.deb
+
+	# For NPU SDK
+	pip3 install --no-deps --no-index /packages/local_packages/python/*.whl
+fi
+
+if [ "$PACKAGE" == "debian" ] || [ "$PACKAGE" == "python" ] ; then
 apt-get update
 
+	# Tinker Edge R: Build NPU SDK dependencies
+	apt-get build-dep -y python3-h5py
+fi
+
+# Tinker Edge R: Build NPU SDK wheels
+if [ "$PACKAGE" == "python" ]; then
+	# For NPU SDK
+	pip3 install wheel setuptools
+	# Upgrade numpy for building scipy
+	pip3 install --upgrade numpy
+	pip3 wheel --wheel-dir=/var/cache/python/ /packages/rknn/tensorflow-1.11.0-cp35-none-linux_aarch64.whl /packages/rknn/opencv_python-4.1.1.26-cp35-cp35m-linux_aarch64.whl /packages/rknn/rknn_toolkit-1.0.3b1-cp35-cp35m-linux_aarch64.whl
+fi
+
+# Tinker Edge R: Build ASUS GPIO libraries
+# For gpio wiring c library
+chmod a+x /usr/local/share/gpio_lib_c_rk3399PRO
+cd /usr/local/share/gpio_lib_c_rk3399PRO
+./build
+# For gpio python library
+cd /usr/local/share/gpio_lib_python_rk3399PRO/
+python setup.py install
+# For gpio python scratch
+cd /usr/local/share/gpio_lib_scratch
+sh ./setup.sh
+cd /
+
+# Tinker Edge R: Audio
+chmod 755 /etc/audio/auto_audio_switch.sh
+chmod 666 /etc/audio/audio.conf
+chmod 755 /usr/lib/pm-utils/sleep.d/02pulseaudio-suspend
+
 #---------------power management --------------
-apt-get install -y busybox pm-utils triggerhappy
+# The following packages are included in the base system.
+#apt-get install -y busybox pm-utils triggerhappy
 cp /etc/Powermanager/triggerhappy.service  /lib/systemd/system/triggerhappy.service
 
 #---------------Video--------------
-echo -e "\033[36m Setup Video.................... \033[0m"
-apt-get install -y gstreamer1.0-plugins-base gstreamer1.0-tools gstreamer1.0-alsa gstreamer1.0-plugins-base-apps
+# The following packages are included in the base system.
+#echo -e "\033[36m Setup Video.................... \033[0m"
+#apt-get install -y gstreamer1.0-plugins-base gstreamer1.0-tools gstreamer1.0-alsa gstreamer1.0-plugins-base-apps
 
 dpkg -i  /packages/video/mpp/*
 dpkg -i  /packages/gst-rkmpp/*.deb
 dpkg -i  /packages/gst-base/*.deb
 apt-mark hold gstreamer1.0-x
+if [ "$PACKAGE" == "debian" ]; then
 apt-get install -f -y
+fi
 
 #---------------Others--------------
 #---------Camera---------
-apt-get install cheese v4l-utils -y
+# The following packages are included in the base system.
+#apt-get install cheese v4l-utils -y
 dpkg -i  /packages/others/camera/*.deb
 if [ "$ARCH" == "armhf" ]; then
        cp /packages/others/camera/libv4l-mplane.so /usr/lib/arm-linux-gnueabihf/libv4l/plugins/
@@ -124,21 +192,30 @@ elif [ "$ARCH" == "arm64" ]; then
        cp /packages/others/camera/libv4l-mplane.so /usr/lib/aarch64-linux-gnu/libv4l/plugins/
 fi
 
-apt-get remove -y libgl1-mesa-dri:$ARCH xserver-xorg-input-evdev:$ARCH
+# The following packages are removed from the base system.
+#apt-get remove -y libgl1-mesa-dri:$ARCH xserver-xorg-input-evdev:$ARCH
+# The following packages are included in the base system.
 apt-get install -y libxfont1:$ARCH libinput-bin:$ARCH libinput10:$ARCH libwacom2:$ARCH libunwind8:$ARCH xserver-xorg-input-libinput:$ARCH libxml2-dev:$ARCH libglib2.0-dev:$ARCH libpango1.0-dev:$ARCH libimlib2-dev:$ARCH librsvg2-dev:$ARCH libxcursor-dev:$ARCH g++ make libdmx-dev:$ARCH libxcb-xv0-dev:$ARCH libxfont-dev:$ARCH libxkbfile-dev:$ARCH libpciaccess-dev:$ARCH mesa-common-dev:$ARCH libpixman-1-dev:$ARCH
 
 #---------------Xserver--------------
 echo "deb http://http.debian.net/debian/ buster main contrib non-free" >> /etc/apt/sources.list
+if [ "$PACKAGE" == "debian" ]; then
 apt-get update
+	apt-get install -f -y x11proto-dev=2018.4-4
+fi
 
-apt-get install -f -y x11proto-dev=2018.4-4 libxcb-xf86dri0-dev:$ARCH qtmultimedia5-examples:$ARCH
+# The following packages excluding x11proto-dev=2018.4-4 are included in the base system.
+#apt-get install -f -y x11proto-dev=2018.4-4 libxcb-xf86dri0-dev:$ARCH qtmultimedia5-examples:$ARCH
 
 #---------update chromium-----
-yes|apt-get install chromium -f -y
+# The following package is included in the base system.
+#yes|apt-get install chromium -f -y
 cp -f /packages/others/chromium/etc/chromium.d/default-flags /etc/chromium.d/
 
 sed -i '/buster/'d /etc/apt/sources.list
+if [ "$PACKAGE" == "debian" ]; then
 apt-get update
+fi
 
 echo -e "\033[36m Setup Xserver.................... \033[0m"
 dpkg -i  /packages/xserver/*
@@ -148,30 +225,67 @@ dpkg -i  /packages/openbox/*.deb
 
 #------------------libdrm------------
 dpkg -i  /packages/libdrm/*.deb
+if [ "$PACKAGE" == "debian" ]; then
 apt-get install -f -y
+fi
 
 #---------kmssink---------
 dpkg -i  /packages/gst-bad/*.deb
+if [ "$PACKAGE" == "debian" ]; then
 apt-get install -f -y
+fi
 
 #---------FFmpeg---------
 dpkg -i  /packages/ffmpeg/*.deb
+if [ "$PACKAGE" == "debian" ]; then
 apt-get install -f -y
+fi
 
 #---------MPV---------
 dpkg -i  /packages/mpv/*.deb
+if [ "$PACKAGE" == "debian" ]; then
 apt-get install -f -y
+fi
 
 #---------------Debug--------------
-if [ "$VERSION" == "debug" ] || [ "$VERSION" == "jenkins" ] ; then
-	apt-get install -y sshfs openssh-server bash-completion
-fi
+# The following packages are included in the base system.
+#if [ "$VERSION" == "debug" ] || [ "$VERSION" == "jenkins" ] ; then
+#	apt-get install -y sshfs openssh-server bash-completion
+#fi
 
 #---------------Custom Script--------------
 systemctl enable rockchip.service
 systemctl mask systemd-networkd-wait-online.service
 systemctl mask NetworkManager-wait-online.service
 rm /lib/systemd/system/wpa_supplicant@.service
+
+# Tinker Edge R: Remove packages which are not needed
+apt autoremove -y
+
+# Tinker Edge R
+cp /etc/Powermanager/systemd-suspend.service  /lib/systemd/system/systemd-suspend.service
+
+# Tinker Edge R
+if [ "$VERSION" == "debug" ] || [ "$VERSION" == "jenkins" ] ; then
+	systemctl enable test.service
+fi
+
+# Tinker Edge R: Mount partition p7
+systemctl enable mountboot.service
+
+# Tinker Edge R: Get accelerated back for chromium v61
+ln -s /usr/lib/aarch64-linux-gnu/libGLESv2.so /usr/lib/chromium/libGLESv2.so
+ln -s /usr/lib/aarch64-linux-gnu/libEGL.so /usr/lib/chromium/libEGL.so
+
+# Tinker Edge R: blueman
+bash /etc/init.d/blueman.sh
+rm /etc/init.d/blueman.sh
+
+# Tinker Edge R: Set cpu default interactive
+rm /etc/init.d/cpufrequtils
+
+# Tinker Edge R
+echo $VERSION_NUMBER-$VERSION > /etc/version
 
 #---------------Clean--------------
 rm -rf /var/lib/apt/lists/*

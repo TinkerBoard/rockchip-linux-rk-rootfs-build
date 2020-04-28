@@ -18,8 +18,10 @@ bluez
 blueman
 btrfs-tools
 build-essential
+busybox
 bzip2
 ca-certificates
+cheese
 chromium
 cmake
 console-setup
@@ -62,6 +64,7 @@ gstreamer1.0-alsa
 gstreamer1.0-libav
 gstreamer1.0-plugins-bad
 gstreamer1.0-plugins-base
+gstreamer1.0-plugins-base-apps
 gstreamer1.0-plugins-good
 gstreamer1.0-tools
 gvfs
@@ -87,6 +90,9 @@ kbd
 kmod
 less
 libcdio-paranoia1
+libdmx-dev
+libglib2.0-dev
+libimlib2-dev
 libinput-bin
 libinput10
 libjpeg-dev
@@ -94,6 +100,9 @@ libjs-bootstrap
 libjs-jquery
 liblapack-dev
 libnotify-bin
+libpango1.0-dev
+libpciaccess-dev
+libpixman-1-dev
 libprotobuf-dev
 libqtgui4
 libqt4-test
@@ -106,12 +115,19 @@ libqt5opengl5
 libqt5qml5
 libqt5quick5
 libqt5widgets5
+librsvg2-dev
 libsdl2-2.0-0
 libunwind8
 libwacom-common
 libwacom2
 libxatracker2
+libxcb-xf86dri0-dev
+libxcb-xv0-dev
+libxcursor-dev
 libxfont1
+libxfont-dev
+libxkbfile-dev
+libxml2-dev
 lightdm
 #linaro-artwork
 #linaro-default-settings
@@ -129,10 +145,12 @@ lxsession-default-apps
 lxsession-logout
 lxshortcut
 lxtask
+make
 makedev
 man-db
 mawk
 memtester
+mesa-common-dev
 mesa-utils
 mesa-utils-extra
 mutrace
@@ -170,6 +188,7 @@ python3-h5py
 python3-pip
 python3-scipy
 qml-module-qtquick2
+qtmultimedia5-examples
 read-edid
 resolvconf
 rfkill
@@ -217,3 +236,4 @@ zlib1g-dev
 lxde-common
 desktop-base
 systemd-sysv
+

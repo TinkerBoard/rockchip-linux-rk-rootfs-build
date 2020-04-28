@@ -21,7 +21,7 @@ if [ -e $TARGET_LOCAL_PACKAGE_DIR ]; then
 	sudo rm -rf $TARGET_LOCAL_PACKAGE_DIR
 fi
 
-VERSION=$VERSION PACKAGE=$PACKAGE ./mk-rootfs-stretch-arm64.sh
+VERSION=$VERSION PACKAGE=$PACKAGE ARCH=$ARCH ./mk-rootfs-stretch.sh
 
 if [ "$PACKAGE" == "debian" ]; then
 	mkdir -p $TARGET_LOCAL_PACKAGE_DIR
