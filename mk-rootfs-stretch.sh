@@ -281,9 +281,6 @@ ln -s /usr/lib/aarch64-linux-gnu/libEGL.so /usr/lib/chromium/libEGL.so
 bash /etc/init.d/blueman.sh
 rm /etc/init.d/blueman.sh
 
-# Tinker Edge R: Set cpu default interactive
-rm /etc/init.d/cpufrequtils
-
 # Tinker Edge R
 echo $VERSION_NUMBER-$VERSION > /etc/version
 
