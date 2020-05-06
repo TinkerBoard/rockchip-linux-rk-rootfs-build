@@ -27,8 +27,3 @@ if [ "$PACKAGE" == "debian" ]; then
 	mkdir -p $TARGET_LOCAL_PACKAGE_DIR
 	cp -rf $TARGET_ROOTFS_DIR/var/cache/apt/archives/*.deb $TARGET_LOCAL_PACKAGE_DIR
 fi
-
-if [ "$PACKAGE" == "python" ]; then
-        mkdir -p $TARGET_LOCAL_PACKAGE_DIR
-        cp -rf $TARGET_ROOTFS_DIR/var/cache/python/*.whl $TARGET_LOCAL_PACKAGE_DIR
-fi

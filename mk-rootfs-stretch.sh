@@ -120,30 +120,16 @@ cat <<EOF | sudo chroot $TARGET_ROOTFS_DIR
 
 chmod o+x /usr/lib/dbus-1.0/dbus-daemon-launch-helper
 
-# Tinker Edge R: Install local packages and wheels
+# Tinker Edge R: Install local packages
 if [ "$PACKAGE" == "local" ]; then
 	#dpkg -i -G -B /packages/packages-local/*.deb
 	dpkg -i /packages/local_packages/debian/*.deb
-
-	# For NPU SDK
-	pip3 install --no-deps --no-index /packages/local_packages/python/*.whl
 fi
 
-if [ "$PACKAGE" == "debian" ] || [ "$PACKAGE" == "python" ] ; then
-apt-get update
-
-	# Tinker Edge R: Build NPU SDK dependencies
-	apt-get build-dep -y python3-h5py
+if [ "$PACKAGE" == "debian" ]; then
+	apt-get update
 fi
 
-# Tinker Edge R: Build NPU SDK wheels
-if [ "$PACKAGE" == "python" ]; then
-	# For NPU SDK
-	pip3 install wheel setuptools
-	# Upgrade numpy for building scipy
-	pip3 install --upgrade numpy
-	pip3 wheel --wheel-dir=/var/cache/python/ /packages/rknn/tensorflow-1.11.0-cp35-none-linux_aarch64.whl /packages/rknn/opencv_python-4.1.1.26-cp35-cp35m-linux_aarch64.whl /packages/rknn/rknn_toolkit-1.0.3b1-cp35-cp35m-linux_aarch64.whl
-fi
 
 # Tinker Edge R: Build ASUS GPIO libraries
 # For gpio wiring c library
@@ -259,6 +245,8 @@ systemctl enable rockchip.service
 systemctl mask systemd-networkd-wait-online.service
 systemctl mask NetworkManager-wait-online.service
 rm /lib/systemd/system/wpa_supplicant@.service
+
+apt --fix-broken install -y
 
 # Tinker Edge R: Remove packages which are not needed
 apt autoremove -y
