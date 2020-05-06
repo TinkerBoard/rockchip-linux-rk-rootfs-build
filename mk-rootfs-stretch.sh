@@ -273,10 +273,6 @@ fi
 # Tinker Edge R: Mount partition p7
 systemctl enable mountboot.service
 
-# Tinker Edge R: Get accelerated back for chromium v61
-ln -s /usr/lib/aarch64-linux-gnu/libGLESv2.so /usr/lib/chromium/libGLESv2.so
-ln -s /usr/lib/aarch64-linux-gnu/libEGL.so /usr/lib/chromium/libEGL.so
-
 # Tinker Edge R: blueman
 bash /etc/init.d/blueman.sh
 rm /etc/init.d/blueman.sh
