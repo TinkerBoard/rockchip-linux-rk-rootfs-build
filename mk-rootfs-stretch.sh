@@ -217,7 +217,7 @@ apt-get update
 fi
 
 echo -e "\033[36m Setup Xserver.................... \033[0m"
-dpkg -i  /packages/xserver/*
+dpkg -i  --auto-deconfigure /packages/xserver/*
 #---------------Openbox--------------
 echo -e "\033[36m Install openbox.................... \033[0m"
 dpkg -i  /packages/openbox/*.deb
