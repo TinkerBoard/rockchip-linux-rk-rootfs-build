@@ -191,6 +191,7 @@ if [ "$ARCH" == "armhf" ]; then
 elif [ "$ARCH" == "arm64" ]; then
        cp /packages/others/camera/libv4l-mplane.so /usr/lib/aarch64-linux-gnu/libv4l/plugins/
 fi
+cp /packages/others/camera/librkisp.so /usr/lib/
 
 # The following packages are removed from the base system.
 #apt-get remove -y libgl1-mesa-dri:$ARCH xserver-xorg-input-evdev:$ARCH
