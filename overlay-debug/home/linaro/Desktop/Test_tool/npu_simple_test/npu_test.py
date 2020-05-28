@@ -23,11 +23,6 @@ if __name__ == '__main__':
 
     # Create RKNN object
     rknn = RKNN()
-    
-    # pre-process config
-    print('--> config model')
-    rknn.config(channel_mean_value='103.94 116.78 123.68 58.82', reorder_channel='0 1 2')
-    print('done')
 
     # Load rknn model
     print('--> Load RKNN model')
@@ -42,14 +37,11 @@ if __name__ == '__main__':
 
     # init runtime environment
     print('--> Init runtime environment')
-    ret = rknn.init_runtime(target='rk3399pro')
+    ret = rknn.init_runtime()
     if ret != 0:
         print('Init runtime environment failed')
         exit(ret)
     print('done')
-
-    sdk_version = rknn.get_sdk_version()
-    print(sdk_version)
 
     # Inference
     print('--> Running model')
@@ -58,8 +50,6 @@ if __name__ == '__main__':
     print('done')
 
     # perf
-    #print('--> Begin evaluate model performance')
     perf_results = rknn.eval_perf(inputs=[img])
-    #print('done')
 
     rknn.release()
