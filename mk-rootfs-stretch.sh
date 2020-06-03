@@ -108,6 +108,12 @@ sudo mkdir -p $TARGET_ROOTFS_DIR/usr/include/rga
 sudo cp packages/$ARCH/rga/include/*      $TARGET_ROOTFS_DIR/usr/include/rga/
 sudo cp packages/$ARCH/rga/lib/librga.so  $TARGET_ROOTFS_DIR/usr/lib/
 
+if [ "$VERSION" == "release" ]; then
+	# install rknn toolkit script
+	mkdir -p $TARGET_ROOTFS_DIR/home/linaro/Desktop
+	sudo cp -rf overlay-debug/home/linaro/Desktop/install_rknn_toolkit_v1.3.2.sh $TARGET_ROOTFS_DIR/home/linaro/Desktop/install_rknn_toolkit_v1.3.2.sh
+fi
+
 echo -e "\033[36m Change root.....................\033[0m"
 if [ "$ARCH" == "armhf" ]; then
 	sudo cp /usr/bin/qemu-arm-static $TARGET_ROOTFS_DIR/usr/bin/
@@ -148,6 +154,12 @@ cd /
 chmod 755 /etc/audio/auto_audio_switch.sh
 chmod 666 /etc/audio/audio.conf
 chmod 755 /usr/lib/pm-utils/sleep.d/02pulseaudio-suspend
+
+if [ "$VERSION" == "release" ]; then
+	# change owner and permission for install rknn toolkit script
+	chown -R linaro:linaro /home/linaro/Desktop/
+	chmod a+x /home/linaro/Desktop/install_rknn_toolkit_v1.3.2.sh
+fi
 
 #---------------power management --------------
 # The following packages are included in the base system.
