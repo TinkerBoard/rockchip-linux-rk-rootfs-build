@@ -125,17 +125,15 @@ sudo mount -o bind /dev $TARGET_ROOTFS_DIR/dev
 cat <<EOF | sudo chroot $TARGET_ROOTFS_DIR
 
 chmod o+x /usr/lib/dbus-1.0/dbus-daemon-launch-helper
+if [ "$PACKAGE" == "debian" ]; then
+apt-get update
+fi
 
 # Tinker Edge R: Install local packages
 if [ "$PACKAGE" == "local" ]; then
-	#dpkg -i -G -B /packages/packages-local/*.deb
-	dpkg -i /packages/local_packages/debian/*.deb
+	dpkg -i -G --auto-deconfigure /packages/local_packages/debian/*.deb
+	apt-get install -f -y
 fi
-
-if [ "$PACKAGE" == "debian" ]; then
-	apt-get update
-fi
-
 
 # Tinker Edge R: Build ASUS GPIO libraries
 # For gpio wiring c library
@@ -175,9 +173,7 @@ dpkg -i  /packages/video/mpp/*
 dpkg -i  /packages/gst-rkmpp/*.deb
 dpkg -i  /packages/gst-base/*.deb
 apt-mark hold gstreamer1.0-x
-if [ "$PACKAGE" == "debian" ]; then
 apt-get install -f -y
-fi
 
 #---------------Others--------------
 #---------Camera---------
@@ -197,22 +193,19 @@ cp /packages/others/camera/librkisp.so /usr/lib/
 apt-get install -y libxfont1:$ARCH libinput-bin:$ARCH libinput10:$ARCH libwacom2:$ARCH libunwind8:$ARCH xserver-xorg-input-libinput:$ARCH libxml2-dev:$ARCH libglib2.0-dev:$ARCH libpango1.0-dev:$ARCH libimlib2-dev:$ARCH librsvg2-dev:$ARCH libxcursor-dev:$ARCH g++ make libdmx-dev:$ARCH libxcb-xv0-dev:$ARCH libxfont-dev:$ARCH libxkbfile-dev:$ARCH libpciaccess-dev:$ARCH mesa-common-dev:$ARCH libpixman-1-dev:$ARCH
 
 #---------------Xserver--------------
-echo "deb http://http.debian.net/debian/ buster main contrib non-free" >> /etc/apt/sources.list
 if [ "$PACKAGE" == "debian" ]; then
+echo "deb http://http.debian.net/debian/ buster main contrib non-free" >> /etc/apt/sources.list
 apt-get update
-	apt-get install -f -y x11proto-dev=2018.4-4
-fi
 
-# The following packages excluding x11proto-dev=2018.4-4 are included in the base system.
-#apt-get install -f -y x11proto-dev=2018.4-4 libxcb-xf86dri0-dev:$ARCH qtmultimedia5-examples:$ARCH
+apt-get install -f -y x11proto-dev=2018.4-4 libxcb-xf86dri0-dev:$ARCH qtmultimedia5-examples:$ARCH
 
 #---------update chromium-----
-# The following package is included in the base system.
-#yes|apt-get install chromium -f -y
+yes|apt-get install chromium -f -y
+fi
 cp -f /packages/others/chromium/etc/chromium.d/default-flags /etc/chromium.d/
 
-sed -i '/buster/'d /etc/apt/sources.list
 if [ "$PACKAGE" == "debian" ]; then
+sed -i '/buster/'d /etc/apt/sources.list
 apt-get update
 fi
 
@@ -224,27 +217,19 @@ dpkg -i  /packages/openbox/*.deb
 
 #------------------libdrm------------
 dpkg -i  /packages/libdrm/*.deb
-if [ "$PACKAGE" == "debian" ]; then
 apt-get install -f -y
-fi
 
 #---------kmssink---------
 dpkg -i  /packages/gst-bad/*.deb
-if [ "$PACKAGE" == "debian" ]; then
 apt-get install -f -y
-fi
 
 #---------FFmpeg---------
 dpkg -i  /packages/ffmpeg/*.deb
-if [ "$PACKAGE" == "debian" ]; then
 apt-get install -f -y
-fi
 
 #---------MPV---------
 dpkg -i  /packages/mpv/*.deb
-if [ "$PACKAGE" == "debian" ]; then
 apt-get install -f -y
-fi
 
 #---------------Debug--------------
 # The following packages are included in the base system.
@@ -257,8 +242,6 @@ systemctl enable rockchip.service
 systemctl mask systemd-networkd-wait-online.service
 systemctl mask NetworkManager-wait-online.service
 rm /lib/systemd/system/wpa_supplicant@.service
-
-apt --fix-broken install -y
 
 # Tinker Edge R: Remove packages which are not needed
 apt autoremove -y
