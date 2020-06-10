@@ -1,10 +1,5 @@
 #!/bin/bash -e
 
-# Tinker Edge R: Build with local packages by default
-if [ ! $PACKAGE ]; then
-	PACKAGE='local'
-fi
-
 # Directory contains the target rootfs
 TARGET_ROOTFS_DIR="binary"
 
@@ -40,12 +35,6 @@ sudo tar -xpf linaro-stretch-alip-*.tar.gz
 echo -e "\033[36m Copy overlay to rootfs \033[0m"
 sudo mkdir -p $TARGET_ROOTFS_DIR/packages
 sudo cp -rf packages/$ARCH/* $TARGET_ROOTFS_DIR/packages
-
-# Tinker Edge R: Copy local packages
-if [ "$PACKAGE" == "local" ]; then
-	sudo mkdir -p $TARGET_ROOTFS_DIR/packages/local_packages
-	sudo cp -rf local_packages-$VERSION/* $TARGET_ROOTFS_DIR/packages/local_packages
-fi
 
 # Tinker Edge R: gpio_lib_python and gpio_lib_c
 if [ "$ARCH" == "arm64" ]; then
@@ -125,15 +114,7 @@ sudo mount -o bind /dev $TARGET_ROOTFS_DIR/dev
 cat <<EOF | sudo chroot $TARGET_ROOTFS_DIR
 
 chmod o+x /usr/lib/dbus-1.0/dbus-daemon-launch-helper
-if [ "$PACKAGE" == "debian" ]; then
 apt-get update
-fi
-
-# Tinker Edge R: Install local packages
-if [ "$PACKAGE" == "local" ]; then
-	dpkg -i -G --auto-deconfigure /packages/local_packages/debian/*.deb
-	apt-get install -f -y
-fi
 
 # Tinker Edge R: Build ASUS GPIO libraries
 # For gpio wiring c library
@@ -187,13 +168,11 @@ elif [ "$ARCH" == "arm64" ]; then
 fi
 cp /packages/others/camera/librkisp.so /usr/lib/
 
-# The following packages are removed from the base system.
-#apt-get remove -y libgl1-mesa-dri:$ARCH xserver-xorg-input-evdev:$ARCH
+apt-get remove -y libgl1-mesa-dri:$ARCH xserver-xorg-input-evdev:$ARCH
 # The following packages are included in the base system.
-apt-get install -y libxfont1:$ARCH libinput-bin:$ARCH libinput10:$ARCH libwacom2:$ARCH libunwind8:$ARCH xserver-xorg-input-libinput:$ARCH libxml2-dev:$ARCH libglib2.0-dev:$ARCH libpango1.0-dev:$ARCH libimlib2-dev:$ARCH librsvg2-dev:$ARCH libxcursor-dev:$ARCH g++ make libdmx-dev:$ARCH libxcb-xv0-dev:$ARCH libxfont-dev:$ARCH libxkbfile-dev:$ARCH libpciaccess-dev:$ARCH mesa-common-dev:$ARCH libpixman-1-dev:$ARCH
+#apt-get install -y libxfont1:$ARCH libinput-bin:$ARCH libinput10:$ARCH libwacom2:$ARCH libunwind8:$ARCH xserver-xorg-input-libinput:$ARCH libxml2-dev:$ARCH libglib2.0-dev:$ARCH libpango1.0-dev:$ARCH libimlib2-dev:$ARCH librsvg2-dev:$ARCH libxcursor-dev:$ARCH g++ make libdmx-dev:$ARCH libxcb-xv0-dev:$ARCH libxfont-dev:$ARCH libxkbfile-dev:$ARCH libpciaccess-dev:$ARCH mesa-common-dev:$ARCH libpixman-1-dev:$ARCH
 
 #---------------Xserver--------------
-if [ "$PACKAGE" == "debian" ]; then
 echo "deb http://http.debian.net/debian/ buster main contrib non-free" >> /etc/apt/sources.list
 apt-get update
 
@@ -201,13 +180,10 @@ apt-get install -f -y x11proto-dev=2018.4-4 libxcb-xf86dri0-dev:$ARCH qtmultimed
 
 #---------update chromium-----
 yes|apt-get install chromium -f -y
-fi
 cp -f /packages/others/chromium/etc/chromium.d/default-flags /etc/chromium.d/
 
-if [ "$PACKAGE" == "debian" ]; then
 sed -i '/buster/'d /etc/apt/sources.list
 apt-get update
-fi
 
 echo -e "\033[36m Setup Xserver.................... \033[0m"
 dpkg -i  /packages/xserver/*
@@ -244,6 +220,7 @@ systemctl mask NetworkManager-wait-online.service
 rm /lib/systemd/system/wpa_supplicant@.service
 
 # Tinker Edge R: Remove packages which are not needed
+apt-get install -f -y
 apt autoremove -y
 
 # Tinker Edge R
