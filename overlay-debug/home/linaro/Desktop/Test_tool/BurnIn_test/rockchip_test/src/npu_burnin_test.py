@@ -51,7 +51,7 @@ if __name__ == '__main__':
 
     # init runtime environment
     print('--> Init runtime environment')
-    ret = rknn.init_runtime(target='rk3399pro')
+    ret = rknn.init_runtime()
     if ret != 0:
         print('Init runtime environment failed')
         exit(ret)
