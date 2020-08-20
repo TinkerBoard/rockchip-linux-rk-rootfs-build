@@ -27,6 +27,10 @@ for user in root $(users);do
 done
 [ $USER ] || exit 0
 
+#config file locations for hdmi user config
+FILE_HDMI_MODES="/boot/hdmi_user_config/hdmi_modes.txt"
+FILE_HDMI_CONFIG="/boot/hdmi_user_config/hdmi_set_resolution.cfg"
+
 HDMI="HDMI-1"
 DP="DP-1"
 
@@ -82,24 +86,33 @@ fi
 #HDMI
 sudo -u $user xrandr
 if [ $hdmi_status = "connected" ]; then
-	if [ -f $HDMI_HOTPLUG_CONFIG ]; then
-		if [ "$(cat $HDMI_HOTPLUG_CONFIG)" = "Plug_Out" ]; then
-			if [ -f $HDMI_XRANDR_CONFIG ]; then
-				if grep -q $(cat $HDMI_XRANDR_CONFIG) $HDMI_MODES_NODE; then
-					sudo -u $user xrandr --output $HDMI --mode $(cat $HDMI_XRANDR_CONFIG)
+	if [ "$(cat $FILE_HDMI_CONFIG)" = "" ]; then
+		if [ -f $HDMI_HOTPLUG_CONFIG ]; then
+			if [ "$(cat $HDMI_HOTPLUG_CONFIG)" = "Plug_Out" ]; then
+				if [ -f $HDMI_XRANDR_CONFIG ]; then
+					if grep -q $(cat $HDMI_XRANDR_CONFIG) $HDMI_MODES_NODE; then
+						sudo -u $user xrandr --output $HDMI --mode $(cat $HDMI_XRANDR_CONFIG)
+					else
+						sudo -u $user xrandr --output $HDMI --auto
+					fi
 				else
 					sudo -u $user xrandr --output $HDMI --auto
 				fi
 			else
-				sudo -u $user xrandr --output $HDMI --auto
-			fi
-		else
-			if [ "$(cat $HDMI_MODE_NODE)" = "" ]; then
-				sudo -u $user xrandr --output $HDMI --auto
+				if [ "$(cat $HDMI_MODE_NODE)" = "" ]; then
+					sudo -u $user xrandr --output $HDMI --auto
+				fi
 			fi
 		fi
+	else
+		sudo -u $user xrandr --output $HDMI --mode $(cat $FILE_HDMI_CONFIG)
 	fi
 	su $user -c "echo Plug_In" > $HDMI_HOTPLUG_CONFIG
+
+	#export HDMI modes to a text file
+	sudo -u $user xrandr -q > $FILE_HDMI_MODES
+	cat /sys/kernel/debug/clk/clk_summary | grep -ie npll -ie vop0 >> $FILE_HDMI_MODES
+
 fi
 
 #DP

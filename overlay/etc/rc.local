@@ -36,6 +36,16 @@ fi
 touch $HDMI_HOTPLUG_CONFIG
 touch $DP_HOTPLUG_CONFIG
 
+#create HDMI config folder for user config
+FILE_HDMI_CONFIG="/boot/hdmi_user_config/hdmi_set_resolution.cfg"
+
+if [ ! -d /boot/hdmi_user_config ]; then
+    mkdir /boot/hdmi_user_config
+fi
+
+if [ ! -f $FILE_HDMI_CONFIG ]; then
+	touch $FILE_HDMI_CONFIG
+fi
 
 rk_wifi_init /dev/ttyS0
 
