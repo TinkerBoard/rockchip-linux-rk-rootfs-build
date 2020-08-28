@@ -140,6 +140,8 @@ then
     systemctl restart lightdm.service || true
 
     touch /usr/local/first_boot_flag
+
+    systemctl restart jack-switch-at-boot.service
 fi
 
 # enable adbd service

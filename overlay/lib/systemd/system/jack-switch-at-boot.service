@@ -1,0 +1,11 @@
+[Unit]
+Description=Jack switch at boot
+
+[Service]
+Type=idle
+ExecStart=/etc/audio/jack_switch_at_boot.sh
+ExecStop=/etc/audio/jack_switch_at_boot.sh
+ExecReload=/etc/audio/jack_switch_at_boot.sh
+
+[Install]
+WantedBy=multi-user.target
