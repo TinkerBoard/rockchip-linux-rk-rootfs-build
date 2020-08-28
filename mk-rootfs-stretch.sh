@@ -120,6 +120,7 @@ apt-get install cheese v4l-utils -y
 dpkg -i  /packages/others/camera/*.deb
 if [ "$ARCH" == "armhf" ]; then
        cp /packages/others/camera/libv4l-mplane.so /usr/lib/arm-linux-gnueabihf/libv4l/plugins/
+       cp /packages/others/camera/librkisp.so /usr/lib/
 elif [ "$ARCH" == "arm64" ]; then
        cp /packages/others/camera/libv4l-mplane.so /usr/lib/aarch64-linux-gnu/libv4l/plugins/
 fi
