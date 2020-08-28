@@ -130,6 +130,7 @@ apt-get install -y libxfont1:$ARCH libinput-bin:$ARCH libinput10:$ARCH libwacom2
 
 #--------------Audio--------------
 chmod 755 /etc/pulse/movesinks.sh
+chmod 755 /etc/audio/jack_auto_switch.sh
 
 #---------------Xserver--------------
 echo "deb http://http.debian.net/debian/ buster main contrib non-free" >> /etc/apt/sources.list
