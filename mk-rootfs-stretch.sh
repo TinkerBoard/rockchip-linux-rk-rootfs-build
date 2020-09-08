@@ -43,10 +43,12 @@ if [ "$VERSION" == "debug" ] || [ "$VERSION" == "jenkins" ]; then
 	sudo cp -rf overlay-debug/* $TARGET_ROOTFS_DIR/
 fi
 
-if [ "$VERSION" == "jenkins" ]; then
+# Utilize the nameserver configuration from the host.
+# This will be reset back to the original one in the end.
+#if [ "$VERSION" == "jenkins" ]; then
 	# network
 	sudo cp -b /etc/resolv.conf $TARGET_ROOTFS_DIR/etc/resolv.conf
-fi
+#fi
 
 # bt/wifi firmware
 if [ "$ARCH" == "armhf" ]; then
@@ -190,3 +192,6 @@ rm -rf /var/lib/apt/lists/*
 EOF
 
 sudo umount $TARGET_ROOTFS_DIR/dev
+
+# Reset resolve.conf to the original one.
+sudo mv $TARGET_ROOTFS_DIR/etc/resolv.conf~ $TARGET_ROOTFS_DIR/etc/resolv.conf
