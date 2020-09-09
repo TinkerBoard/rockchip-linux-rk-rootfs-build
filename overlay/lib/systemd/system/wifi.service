@@ -1,0 +1,12 @@
+[Unit]
+Description=Wi-Fi SDIO driver service
+Before=wpa_supplicant.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=true
+ExecStart=/bin/true
+ExecStop=/sbin/rmmod 8723bs
+
+[Install]
+WantedBy=multi-user.target

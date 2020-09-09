@@ -136,6 +136,9 @@ chmod 755 /etc/audio/jack_auto_switch.sh
 chmod 755 /etc/audio/jack_switch_at_boot.sh
 ls -s /lib/systemd/system/jack-switch-at-boot.service /etc/systemd/system/multi-user.target.wants/jack-switch-at-boot.service
 
+#--------------Wi-Fi--------------
+ln -s /lib/systemd/system/wifi.service /etc/systemd/system/multi-user.target.wants/wifi.service
+
 #---------------Xserver--------------
 echo "deb http://http.debian.net/debian/ buster main contrib non-free" >> /etc/apt/sources.list
 apt-get update
