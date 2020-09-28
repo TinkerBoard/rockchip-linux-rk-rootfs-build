@@ -1,7 +1,7 @@
 #!/bin/bash
 
-board_info=`cat /proc/board_info`
-if [ "${board_info}" != "Tinker Board S" ] && [ "${board_info}" != "Tinker R/BR" ]; then
+boardinfo=`cat /proc/boardinfo`
+if [ "${boardinfo}" != "Tinker Board S" ] && [ "${boardinfo}" != "Tinker R/BR" ] && [ "${boardinfo}" != "Tinker Board S/HV" ]; then
 	exit 0
 fi
 
