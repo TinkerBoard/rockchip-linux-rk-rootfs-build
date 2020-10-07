@@ -190,6 +190,10 @@ systemctl mask NetworkManager-wait-online.service
 rm /lib/systemd/system/wpa_supplicant@.service
 ln -s /lib/systemd/system/hciuart.service /etc/systemd/system/multi-user.target.wants/hciuart.service
 
+#-------------blueman--------------
+bash /etc/init.d/blueman.sh
+rm /etc/init.d/blueman.sh
+
 #-------------mount partition p7--------------
 systemctl enable mountboot.service
 
