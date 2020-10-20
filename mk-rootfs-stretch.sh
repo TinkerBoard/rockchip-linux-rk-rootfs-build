@@ -204,6 +204,9 @@ systemctl enable mountboot.service
 #-------ASUS customization-------
 plymouth-set-default-theme script
 
+# Don't show this on menu for now since it does not work.
+rm /usr/share/applications/squeak.desktop
+
 #---------------Clean--------------
 rm -rf /var/lib/apt/lists/*
 
