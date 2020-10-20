@@ -133,7 +133,6 @@ apt-get remove -y libgl1-mesa-dri:$ARCH xserver-xorg-input-evdev:$ARCH
 apt-get install -y libxfont1:$ARCH libinput-bin:$ARCH libinput10:$ARCH libwacom2:$ARCH libunwind8:$ARCH xserver-xorg-input-libinput:$ARCH libxml2-dev:$ARCH libglib2.0-dev:$ARCH libpango1.0-dev:$ARCH libimlib2-dev:$ARCH librsvg2-dev:$ARCH libxcursor-dev:$ARCH g++ make libdmx-dev:$ARCH libxcb-xv0-dev:$ARCH libxfont-dev:$ARCH libxkbfile-dev:$ARCH libpciaccess-dev:$ARCH mesa-common-dev:$ARCH libpixman-1-dev:$ARCH
 
 apt-get install -y plymouth plymouth-themes
-plymouth-set-default-theme script
 
 #--------------Audio--------------
 chmod 755 /etc/pulse/movesinks.sh
@@ -201,6 +200,9 @@ rm /etc/init.d/blueman.sh
 
 #-------------mount partition p7--------------
 systemctl enable mountboot.service
+
+#-------ASUS customization-------
+plymouth-set-default-theme script
 
 #---------------Clean--------------
 rm -rf /var/lib/apt/lists/*
