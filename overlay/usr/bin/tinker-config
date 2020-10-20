@@ -298,6 +298,104 @@ do_internationalisation_menu() {
   fi
 }
 
+get_audio_auto_detect() {
+  if grep -q -E "^jack_auto_switch=\"on\"" /etc/audio/audio.conf; then
+    echo 0
+  else
+    echo 1
+  fi
+}
+
+do_audio_auto_detect() {
+  DEFAULT=--defaultno
+  if [ $(get_audio_auto_detect) -eq 0 ]; then
+    DEFAULT=
+  fi
+  if [ "$INTERACTIVE" = True ]; then
+    whiptail --yesno "Would you like to enable auto switch to 3.5mm when audio jack plug in?" $DEFAULT 20 60 2 \
+        --yes-button Enable --no-button Disable
+    RET=$?
+  else
+    RET=$1
+  fi
+  if [ $RET -eq 0 ]; then
+    sed -i /etc/audio/audio.conf -e "s/^jack_auto_switch=.*/jack_auto_switch=\"on\"/"
+    STATUS=enabled
+  elif [ $RET -eq 1 ]; then
+    sed -i /etc/audio/audio.conf -e "s/^jack_auto_switch=.*/jack_auto_switch=\"off\"/"
+    STATUS=disabled
+  else
+    return $RET
+  fi
+  if [ "$INTERACTIVE" = True ]; then
+    whiptail --msgbox "Audio auto detection is $STATUS" 20 60 1
+  fi
+}
+
+get_audio() {
+  DEFAULT_SINK=$(sudo -u linaro PULSE_RUNTIME_PATH=/run/user/1000/pulse pacmd stat | grep "Default sink name:" | sed -n 's/^Default sink name: *//p')
+  case "$DEFAULT_SINK" in
+    alsa_output.OnBoard_D0)
+      echo 1
+      ;;
+    alsa_output.OnBoard_D1)
+      echo 2
+      ;;
+    alsa_output.OnBoard_D2)
+      echo 3
+      ;;
+    alsa_output.platform-sound-simple-card.analog-stereo)
+      echo 4
+      ;;
+    *)
+      /etc/pulse/movesinks.sh alsa_output.platform-sound-simple-card.analog-stereo > /dev/null
+      echo 4
+      ;;
+  esac
+}
+
+do_audio() {
+  if [ "$INTERACTIVE" = True ]; then
+    AUDIO_OUT=$(whiptail --menu "Choose the audio output" 20 60 10 --default-item $(get_audio)\
+      "0" "Enable/Disable auto detection" \
+      "1" "Force BT VOIP" \
+      "2" "Force SPDIF" \
+      "3" "Force 3.5mm ('headphone') jack" \
+      "4" "Force HDMI" \
+      3>&1 1>&2 2>&3)
+  else
+    AUDIO_OUT=$1
+  fi
+  if [ $? -eq 0 ]; then
+    case "$AUDIO_OUT" in
+      0)
+        do_audio_auto_detect
+        ;;
+      1)
+        AUDIO_ARG="alsa_output.OnBoard_D0"
+        ;;
+      2)
+        AUDIO_ARG="alsa_output.OnBoard_D1"
+        ;;
+      3)
+        AUDIO_ARG="alsa_output.OnBoard_D2"
+        ;;
+      4)
+        AUDIO_ARG="alsa_output.platform-sound-simple-card.analog-stereo"
+        ;;
+      *)
+        whiptail --msgbox "Programmer error: unrecognized option" 20 60 1
+        ;;
+    esac
+    if ! [ "$AUDIO_ARG" = "" ]; then
+      /etc/pulse/movesinks.sh $AUDIO_ARG
+      if grep -q "^jack_auto_switch=\"on\"" /etc/audio/audio.conf; then
+        sudo sed -i 's/jack_default_device=.*/jack_default_device="'$AUDIO_ARG'"/' /etc/audio/audio.conf
+      fi
+    fi
+  fi
+}
+
 get_camera() {
   if grep -q -E "overlay=camera-ov5647-overlay" $HWCONFIG; then
     echo 1
@@ -564,6 +662,7 @@ do_interface_menu() {
     "F4  SPI" "Enable/Disable automatic loading of SPI kernel module" \
     "F5  I2C" "Enable/Disable automatic loading of I2C kernel module" \
     "F6  UART" "Enable/Disable automatic loading of UART kernel module" \
+    "F7  Audio" "Audio device setting" \
     3>&1 1>&2 2>&3)
   RET=$?
   if [ $RET -eq 1 ]; then
@@ -576,6 +675,7 @@ do_interface_menu() {
       F4\ *) do_spi ;;
       F5\ *) do_i2c ;;
       F6\ *) do_uart ;;
+      F7\ *) do_audio ;;
       *) whiptail --msgbox "Programmer error: unrecognized option" 20 60 1 ;;
     esac || whiptail --msgbox "There was an error running option $FUN" 20 60 1
   fi
