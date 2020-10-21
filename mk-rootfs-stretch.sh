@@ -132,17 +132,6 @@ fi
 apt-get remove -y libgl1-mesa-dri:$ARCH xserver-xorg-input-evdev:$ARCH
 apt-get install -y libxfont1:$ARCH libinput-bin:$ARCH libinput10:$ARCH libwacom2:$ARCH libunwind8:$ARCH xserver-xorg-input-libinput:$ARCH libxml2-dev:$ARCH libglib2.0-dev:$ARCH libpango1.0-dev:$ARCH libimlib2-dev:$ARCH librsvg2-dev:$ARCH libxcursor-dev:$ARCH g++ make libdmx-dev:$ARCH libxcb-xv0-dev:$ARCH libxfont-dev:$ARCH libxkbfile-dev:$ARCH libpciaccess-dev:$ARCH mesa-common-dev:$ARCH libpixman-1-dev:$ARCH
 
-apt-get install -y plymouth plymouth-themes
-
-#--------------Audio--------------
-chmod 755 /etc/pulse/movesinks.sh
-chmod 755 /etc/audio/jack_auto_switch.sh
-chmod 755 /etc/audio/jack_switch_at_boot.sh
-ls -s /lib/systemd/system/jack-switch-at-boot.service /etc/systemd/system/multi-user.target.wants/jack-switch-at-boot.service
-
-#--------------Wi-Fi--------------
-ln -s /lib/systemd/system/wifi.service /etc/systemd/system/multi-user.target.wants/wifi.service
-
 #---------------Xserver--------------
 echo "deb http://http.debian.net/debian/ buster main contrib non-free" >> /etc/apt/sources.list
 apt-get update
@@ -192,6 +181,8 @@ systemctl enable rockchip.service
 systemctl mask systemd-networkd-wait-online.service
 systemctl mask NetworkManager-wait-online.service
 rm /lib/systemd/system/wpa_supplicant@.service
+
+#-------ASUS customization start-------
 ln -s /lib/systemd/system/hciuart.service /etc/systemd/system/multi-user.target.wants/hciuart.service
 
 #-------------blueman--------------
@@ -201,11 +192,21 @@ rm /etc/init.d/blueman.sh
 #-------------mount partition p7--------------
 systemctl enable mountboot.service
 
-#-------ASUS customization-------
+#--------------Audio--------------
+chmod 755 /etc/pulse/movesinks.sh
+chmod 755 /etc/audio/jack_auto_switch.sh
+chmod 755 /etc/audio/jack_switch_at_boot.sh
+ls -s /lib/systemd/system/jack-switch-at-boot.service /etc/systemd/system/multi-user.target.wants/jack-switch-at-boot.service
+
+#--------------Wi-Fi--------------
+ln -s /lib/systemd/system/wifi.service /etc/systemd/system/multi-user.target.wants/wifi.service
+
+apt-get install -y plymouth plymouth-themes
 plymouth-set-default-theme script
 
 # Don't show this on menu for now since it does not work.
 rm /usr/share/applications/squeak.desktop
+#-------ASUS customization end-------
 
 #---------------Clean--------------
 rm -rf /var/lib/apt/lists/*
