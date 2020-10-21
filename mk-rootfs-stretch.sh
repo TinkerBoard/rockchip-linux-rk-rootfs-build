@@ -19,6 +19,11 @@ if [ ! $VERSION ]; then
 	VERSION="debug"
 fi
 
+# Initialized to "end", howecer this should be set in build.sh
+if [ ! $VERSION_NUMBER ]; then
+	VERSION_NUMBER="eng"
+fi
+
 if [ ! -e linaro-stretch-alip-*.tar.gz ]; then
 	echo "\033[36m Run mk-base-debian.sh first \033[0m"
 fi
@@ -210,6 +215,8 @@ rm /usr/share/applications/squeak.desktop
 # With the packages xfonts-100dpi and xfonts-75dpi installed, this is to avoid warning when opening xkeycaps.
 xset +fp /usr/share/fonts/X11/75dpi/
 xset +fp /usr/share/fonts/X11/100dpi/
+
+sudo echo $VERSION_NUMBER > /etc/version
 #-------ASUS customization end-------
 
 #---------------Clean--------------
