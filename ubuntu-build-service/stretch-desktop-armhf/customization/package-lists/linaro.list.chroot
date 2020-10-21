@@ -22,6 +22,7 @@ chromium
 cmake
 console-setup
 cpufrequtils
+cron
 crda
 curl
 dbus-x11
@@ -32,6 +33,7 @@ debian-keyring
 dirmngr
 dmz-cursor-theme
 dnsmasq-base
+dphys-swapfile
 eject
 evtest
 exfat-fuse
@@ -81,6 +83,7 @@ iw
 kbd
 kmod
 less
+libnotify-bin
 libxatracker2
 lightdm
 #linaro-artwork
@@ -88,6 +91,7 @@ lightdm
 linaro-overlay-minimal
 #lm-sensors
 locales
+logrotate
 lsb-release
 lsof
 lxde
@@ -101,6 +105,7 @@ lxtask
 man-db
 makedev
 mawk
+memtester
 mesa-utils
 mesa-utils-extra
 mutrace
@@ -141,6 +146,7 @@ rsyslog
 scratch
 ssh-import-id
 strace
+stressapptest
 sudo
 synaptic
 trace-cmd
@@ -159,7 +165,10 @@ wpasupplicant
 x11-utils
 x11-xserver-utils
 xdg-user-dirs-gtk
+xfce4-notifyd
 xfce4-power-manager-plugins
+xfonts-100dpi
+xfonts-75dpi
 xinit
 xmms2-client-cli
 xmms2-plugin-mad

@@ -206,6 +206,10 @@ plymouth-set-default-theme script
 
 # Don't show this on menu for now since it does not work.
 rm /usr/share/applications/squeak.desktop
+
+# With the packages xfonts-100dpi and xfonts-75dpi installed, this is to avoid warning when opening xkeycaps.
+xset +fp /usr/share/fonts/X11/75dpi/
+xset +fp /usr/share/fonts/X11/100dpi/
 #-------ASUS customization end-------
 
 #---------------Clean--------------

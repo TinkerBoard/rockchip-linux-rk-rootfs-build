@@ -139,6 +139,9 @@ then
     # The base target does not come with lightdm
     systemctl restart lightdm.service || true
 
+    sed /etc/dphys-swapfile -i -e "s/^#CONF_SWAPSIZE=.*/CONF_SWAPSIZE=100/"
+    systemctl restart dphys-swapfile.service
+
     touch /usr/local/first_boot_flag
 
     systemctl restart jack-switch-at-boot.service
