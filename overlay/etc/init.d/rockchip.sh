@@ -168,7 +168,7 @@ then
         ln -s ../init.d/adbd.sh K01adbd.sh
     fi
 
-    service adbd.sh start
+    #service adbd.sh start
 fi
 
 # support power management
