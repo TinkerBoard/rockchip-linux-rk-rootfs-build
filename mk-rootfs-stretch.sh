@@ -145,6 +145,9 @@ fi
 #apt-get install -y busybox pm-utils triggerhappy
 cp /etc/Powermanager/triggerhappy.service  /lib/systemd/system/triggerhappy.service
 
+#---------------Rga--------------
+dpkg -i /packages/rga/*.deb
+
 #---------------Video--------------
 # The following packages are included in the base system.
 #echo -e "\033[36m Setup Video.................... \033[0m"
