@@ -92,11 +92,6 @@ elif [ "$ARCH" == "arm64" ] && [ "$VERSION" == "debug" ]; then
 	sudo cp overlay-debug/usr/local/share/glmark2/aarch64/bin/glmark2-es2 $TARGET_ROOTFS_DIR/usr/local/bin/glmark2-es2
 fi
 
-# rga
-sudo mkdir -p $TARGET_ROOTFS_DIR/usr/include/rga
-sudo cp packages/$ARCH/rga/include/*      $TARGET_ROOTFS_DIR/usr/include/rga/
-sudo cp packages/$ARCH/rga/lib/librga.so  $TARGET_ROOTFS_DIR/usr/lib/
-
 if [ "$VERSION" == "release" ]; then
 	# install rknn toolkit script
 	mkdir -p $TARGET_ROOTFS_DIR/home/linaro/Desktop
