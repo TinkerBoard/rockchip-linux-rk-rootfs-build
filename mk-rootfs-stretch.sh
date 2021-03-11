@@ -95,7 +95,7 @@ fi
 if [ "$VERSION" == "release" ]; then
 	# install rknn toolkit script
 	mkdir -p $TARGET_ROOTFS_DIR/home/linaro/Desktop
-	sudo cp -rf overlay-debug/home/linaro/Desktop/install-rknn-toolkit-v1.4.0.sh $TARGET_ROOTFS_DIR/home/linaro/Desktop/install-rknn-toolkit-v1.4.0.sh
+	sudo cp -rf overlay-debug/home/linaro/Desktop/install-rknn-toolkit-v1.6.0.sh $TARGET_ROOTFS_DIR/home/linaro/Desktop/install-rknn-toolkit-v1.6.0.sh
 fi
 
 echo -e "\033[36m Change root.....................\033[0m"
@@ -132,7 +132,7 @@ chmod 755 /usr/lib/pm-utils/sleep.d/02pulseaudio-suspend
 if [ "$VERSION" == "release" ]; then
 	# change owner and permission for install rknn toolkit script
 	chown -R linaro:linaro /home/linaro/Desktop/
-	chmod a+x /home/linaro/Desktop/install-rknn-toolkit-v1.4.0.sh
+	chmod a+x /home/linaro/Desktop/install-rknn-toolkit-v1.6.0.sh
 fi
 
 #---------------power management --------------
