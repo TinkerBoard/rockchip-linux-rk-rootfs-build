@@ -31,6 +31,9 @@ install_mali() {
         rk3128|rk3036)
             MALI=utgard-400
             ;;
+        rk3568|rk3566)
+            MALI=bifrost-g52
+            ;;
     esac
 
     apt install -f /packages/libmali/libmali-*$MALI*-x11*.deb
@@ -59,6 +62,8 @@ elif [[ $COMPATIBLE =~ "px30" ]]; then
     CHIPNAME="px30"
 elif [[ $COMPATIBLE =~ "rk3128" ]]; then
     CHIPNAME="rk3128"
+elif [[ $COMPATIBLE =~ "rk3568" ]]; then
+    CHIPNAME="rk3568"
 else
     CHIPNAME="rk3036"
 fi
@@ -76,6 +81,17 @@ then
 
     install_mali ${CHIPNAME}
     setcap CAP_SYS_ADMIN+ep /usr/bin/gst-launch-1.0
+
+    # Cannot open pixbuf loader module file
+    if [ -e "/usr/lib/arm-linux-gnueabihf" ] ;
+    then
+	/usr/lib/arm-linux-gnueabihf/gdk-pixbuf-2.0/gdk-pixbuf-query-loaders > /usr/lib/arm-linux-gnueabihf/gdk-pixbuf-2.0/2.10.0/loaders.cache
+	update-mime-database /usr/share/mime/
+    elif [ -e "/usr/lib/aarch64-linux-gnu" ];
+    then
+	/usr/lib/aarch64-linux-gnu/gdk-pixbuf-2.0/gdk-pixbuf-query-loaders > /usr/lib/aarch64-linux-gnu/gdk-pixbuf-2.0/2.10.0/loaders.cache
+    fi
+
     rm -rf /packages
 
     # The base target does not come with lightdm
@@ -114,7 +130,7 @@ then
 fi
 
 # support power management
-if [ -e "/usr/sbin/pm-suspend" ] ;
+if [ -e "/usr/sbin/pm-suspend" -a -e /etc/Powermanageer ] ;
 then
     mv /etc/Powermanager/power-key.sh /usr/bin/
     mv /etc/Powermanager/power-key.conf /etc/triggerhappy/triggers.d/
@@ -128,6 +144,14 @@ then
     rm /etc/Powermanager -rf
     service triggerhappy restart
 fi
+
+# Create dummy video node for chromium V4L2 VDA/VEA with rkmpp plugin
+echo dec > /dev/video-dec0
+echo enc > /dev/video-enc0
+
+# The chromium using fixed pathes for libv4l2.so
+ln -rsf /usr/lib/*/libv4l2.so /usr/lib/
+[ -e /usr/lib/aarch64-linux-gnu/ ] && ln -Tsf lib /usr/lib64
 
 # read mac-address from efuse
 # if [ "$BOARDNAME" == "rk3288-miniarm" ]; then
