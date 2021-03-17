@@ -1,0 +1,7 @@
+//////////////////////////////////////////////////////////
+gstreamer1.0-rockchip1_20210318_arm64.deb
+gstreamer1.0-rockchip1-dbgsym_20210318_arm64.deb
+https://github.com/rockchip-linux/gstreamer-rockchip
+branch:master
+The last RK's commit: 72813640048386960dd9c8d389523a2d574552b9
+ASUS Patch:0001-mppvideodec-Remove-mpeg2-decoder.patch
