@@ -19,6 +19,11 @@ if [ ! $VERSION ]; then
 	VERSION="debug"
 fi
 
+# Initialized to "eng", however this should be set in build.sh
+if [ ! $VERSION_NUMBER ]; then
+	VERSION_NUMBER="eng"
+fi
+
 if [ ! -e linaro-stretch-alip-*.tar.gz ]; then
 	echo "\033[36m Run mk-base-debian.sh first \033[0m"
 fi
@@ -104,6 +109,11 @@ if [ "$ARCH" == "armhf" ]; then
 elif [ "$ARCH" == "arm64"  ]; then
 	sudo cp /usr/bin/qemu-aarch64-static $TARGET_ROOTFS_DIR/usr/bin/
 fi
+
+# Utilize the nameserver configuration from the host.
+# This will be reset back to the original one in the end.
+sudo cp -b /etc/resolv.conf $TARGET_ROOTFS_DIR/etc/resolv.conf
+
 sudo mount -o bind /dev $TARGET_ROOTFS_DIR/dev
 
 cat <<EOF | sudo chroot $TARGET_ROOTFS_DIR
@@ -249,3 +259,6 @@ rm -rf /var/lib/apt/lists/*
 EOF
 
 sudo umount $TARGET_ROOTFS_DIR/dev
+
+# Reset resolve.conf to the original one.
+sudo mv $TARGET_ROOTFS_DIR/etc/resolv.conf~ $TARGET_ROOTFS_DIR/etc/resolv.conf
