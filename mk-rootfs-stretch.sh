@@ -98,9 +98,10 @@ elif [ "$ARCH" == "arm64" ] && [ "$VERSION" == "debug" ]; then
 fi
 
 if [ "$VERSION" == "release" ]; then
-	# install rknn toolkit script
-	mkdir -p $TARGET_ROOTFS_DIR/home/linaro/Desktop
-	sudo cp -rf overlay-debug/home/linaro/Desktop/install-rknn-toolkit-v1.6.0.sh $TARGET_ROOTFS_DIR/home/linaro/Desktop/install-rknn-toolkit-v1.6.0.sh
+    # install rknn toolkit script
+    mkdir -p $TARGET_ROOTFS_DIR/home/linaro/Desktop
+    sudo cp -rf overlay-debug/home/linaro/Desktop/rknn_toolkit_v1.6.0 $TARGET_ROOTFS_DIR/home/linaro/Desktop/rknn_toolkit_v1.6.0
+    sudo cp -f overlay-debug/home/linaro/Desktop/install-rknn-toolkit-v1.6.0.sh $TARGET_ROOTFS_DIR/home/linaro/Desktop/
 fi
 
 echo -e "\033[36m Change root.....................\033[0m"
@@ -139,11 +140,11 @@ chmod 755 /etc/audio/auto_audio_switch.sh
 chmod 666 /etc/audio/audio.conf
 chmod 755 /usr/lib/pm-utils/sleep.d/02pulseaudio-suspend
 
-if [ "$VERSION" == "release" ]; then
-	# change owner and permission for install rknn toolkit script
-	chown -R linaro:linaro /home/linaro/Desktop/
-	chmod a+x /home/linaro/Desktop/install-rknn-toolkit-v1.6.0.sh
-fi
+# Tinker Edge R: rknn-toolkit
+# change owner and permission for install rknn toolkit script
+chown -R linaro:linaro /home/linaro/Desktop/
+chmod a+x /home/linaro/Desktop/install-rknn-toolkit-v1.6.0.sh
+# Tinker Edge R: rknn-toolkit
 
 #---------------power management --------------
 # The following packages are included in the base system.
