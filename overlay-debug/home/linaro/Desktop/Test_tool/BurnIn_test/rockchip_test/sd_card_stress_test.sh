@@ -3,10 +3,18 @@
 #read -p "input source path:" src
 #read -p "input destination path:" dest
 
+TAG=SD
+logfile=$2
+log()
+{
+	echo "$(date +'%Y%m%d_%H.%M.%S') $TAG $@"  | tee -a $logfile
+}
+
+
 sd_path=$(grep mmcblk0 /proc/mounts | cut -d ' ' -f 2)
 dev_name=$(grep mmcblk0 /proc/mounts | cut -d ' ' -f 1)
 if [ -z $sd_path ]; then
-	echo SD card not detect, exit test!!
+	log "SD card not detect, exit test!!"
 	exit
 fi
 
@@ -17,7 +25,7 @@ mount -o rw "$dev_name" /media/linaro/sd
 sd_path=$(grep mmcblk0 /proc/mounts | cut -d ' ' -f 2)
 
 if [ $sd_path != "/media/linaro/sd" ]; then
-	echo SD card mount fail, exit test!!
+	log "SD card mount fail, exit test!!"
 	exit
 fi
 
@@ -30,7 +38,7 @@ cp -vr $emmc_src /$sd_path/src
 while [ 1 != 2 ]
 do
     if [ -e ${dest} ]; then
-        echo "the file is existed and remove it" && rm -vrf ${dest}
+        log "the file is existed and remove it" && rm -vrf ${dest}
 	sleep 1
     else
         cp -vr ${src} ${dest}
