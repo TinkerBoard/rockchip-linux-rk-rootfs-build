@@ -1,9 +1,11 @@
 #!/bin/bash
 
-version=1.5
+version=1.6
 
 log()
 {
+	logfile=$LOG_PATH/BurnIn.txt
+	logfile2="/dev/kmsg"
 	echo $1 | tee -a $logfile | sudo tee $logfile2
 	logger -t BurnIn "$1"
 }
@@ -23,7 +25,7 @@ select_test_item()
 	echo "4. DDR stress test"
 	echo "5. eMMC stress test"
 	echo "6. SD card stress test"
-	echo "7. Wi-Fi download/upload stress test"
+	echo "7. Network download/upload stress test"
 	read -p "Select test case: " test_item
 }
 info_view()
@@ -49,11 +51,14 @@ high_performance()
 
 cpu_freq_stress_test()
 {
-	sudo bash $path/rockchip_test/cpu_freq_stress_test.sh 864000 10 > /dev/null 2>&1 &
+	logfile=$LOG_PATH/cpu.txt
+	time=2592000 # 30 days = 60 * 60 * 24 * 30
+	sudo bash $path/rockchip_test/cpu_freq_stress_test.sh $time 10 $logfile > /dev/null 2>&1 &
 }
 
 npu_test()
 {
+	logfile=$LOG_PATH/npu.txt
 	ProcNum=$(ps aux | grep npu_transfer_proxy | grep -v 'grep' | wc -l)
 	if [ "$ProcNum" == 0 ]; then
 		echo "Start npu_transfer_proxy"
@@ -64,27 +69,32 @@ npu_test()
 
 gpu_test()
 {
-    sudo bash $path/rockchip_test/gpu_stress.sh $source
+	logfile=$LOG_PATH/gpu.txt
+	sudo bash $path/rockchip_test/gpu_stress.sh $source
 }
 
 ddr_test()
 {
-	sudo memtester 1GB > /dev/null 2>&1 &
+	logfile=$LOG_PATH/ddr.txt
+	sudo memtester $1 > $logfile 2>&1 &
 }
 
 emmc_stress_test()
 {
-	sudo bash $path/rockchip_test/emmc_stress_test.sh $path
+	logfile=$LOG_PATH/emmc.txt
+	sudo bash $path/rockchip_test/emmc_stress_test.sh $path $logfile
 }
 
 sd_card_stress_test()
 {
-	sudo bash $path/rockchip_test/sd_card_stress_test.sh $path
+	logfile=$LOG_PATH/sd.txt
+	sudo bash $path/rockchip_test/sd_card_stress_test.sh $path $logfile
 }
 
-wifi_stress_test()
+network_stress_test()
 {
-	sudo bash $path/rockchip_test/wifi_stress_test.sh
+	logfile=$LOG_PATH/network.txt
+	sudo bash $path/rockchip_test/network_stress_test.sh $logfile
 }
 
 CPU="stressapptest"
@@ -132,49 +142,42 @@ else
 fi
 
 now="$(date +'%Y%m%d_%H%M')"
-logfile2="/dev/kmsg"
+LOG_PATH=/var/log/burnin_test/$now
 high_performance
 
 case $test_item in
 	1)
 		check_system_status=true
-		logfile="$path/$now"_cpu.txt
 		info_view CPU
 		cpu_freq_stress_test
 		;;
 	2)
 		check_system_status=false
-		logfile="$path/$now"_npu.txt
 		info_view NPU
 		npu_test
 		pause 'Test stop, press any key to exit...'
 		;;
 	3)
 		check_system_status=true
-		logfile="$path/$now"_gpu.txt
 		info_view GPU
 		gpu_test
 		;;
 	4)
 		check_system_status=true
-		logfile="$path/$now"_ddr.txt
 		info_view DDR
-		ddr_test
+		ddr_test 256M
 		;;
 	5)
-		logfile="$path/$now"_emmc.txt
 		info_view eMMC_RW
-		emmc_stress_test | tee -a $logfile
+		emmc_stress_test
 		;;
 	6)
-		logfile="$path/$now"_sd.txt
 		info_view SD_RW
-		sd_card_stress_test | tee -a $logfile
+		sd_card_stress_test
 		;;
 	7)
-		logfile="$path/$now"_wifi.txt
-		info_view Wi-Fi
-		wifi_stress_test | tee -a $logfile
+		info_view Network
+		network_stress_test
 		;;
 	*)
 		check_system_status=true
@@ -183,10 +186,10 @@ case $test_item in
 		cpu_freq_stress_test
 		npu_test > /dev/null 2>&1 &
 		gpu_test
-		ddr_test
+		ddr_test 128M
 		emmc_stress_test > /dev/null 2>&1 &
 		sd_card_stress_test > /dev/null 2>&1 &
-		wifi_stress_test > /dev/null 2>&1 &
+		network_stress_test > /dev/null 2>&1 &
 		;;
 esac
 

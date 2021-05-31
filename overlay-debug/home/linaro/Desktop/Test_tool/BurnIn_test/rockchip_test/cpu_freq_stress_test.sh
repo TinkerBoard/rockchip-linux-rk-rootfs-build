@@ -14,7 +14,7 @@ echo "every cpu frqeucny will stay $2 seconds"
 cpu_cnt=`cat /proc/cpuinfo | grep processor | sort | uniq | wc -l`
 
 #stressapptest -s $1 --pause_delay 10 --pause_duration 1 -W --stop_on_errors -M 128&
-stressapptest -s $1 --pause_delay 600 --pause_duration 1 -W --stop_on_errors  -M 128&
+stressapptest -s $1 --pause_delay 600 --pause_duration 1 -W --stop_on_errors  -M 32 > $3 2>&1 &
 
 exit 0
 

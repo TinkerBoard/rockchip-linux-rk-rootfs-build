@@ -13,8 +13,10 @@ if [ $1 == "win" ]; then
 fi
 
 #run glmark2-es2, benchmark - refract
-for i in {1..6};
+glmark2-es2 --benchmark refract --run-forever > /dev/null &
+
+for i in {1..2};
 do
-    glmark2-es2 --benchmark refract --run-forever > /dev/null &
+    glmark2-es2 --benchmark refract --run-forever --off-screen > /dev/null &
     sleep 1
 done
