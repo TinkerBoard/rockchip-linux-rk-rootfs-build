@@ -143,6 +143,8 @@ fi
 
 now="$(date +'%Y%m%d_%H%M')"
 LOG_PATH=/var/log/burnin_test/$now
+mkdir -p $LOG_PATH
+
 high_performance
 
 case $test_item in
