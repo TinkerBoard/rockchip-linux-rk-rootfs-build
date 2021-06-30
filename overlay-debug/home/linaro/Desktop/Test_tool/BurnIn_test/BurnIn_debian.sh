@@ -142,7 +142,7 @@ else
 fi
 
 now="$(date +'%Y%m%d_%H%M')"
-LOG_PATH=/var/log/burnin_test/$now
+LOG_PATH=$path/log/$now
 mkdir -p $LOG_PATH
 
 high_performance
