@@ -232,8 +232,8 @@ systemctl mask systemd-networkd-wait-online.service
 systemctl mask NetworkManager-wait-online.service
 rm /lib/systemd/system/wpa_supplicant@.service
 
-# Tinker Edge R: Remove packages which are not needed
-apt-get install -f -y
+#-------ASUS customization start-------
+# Remove packages which are not needed.
 apt autoremove -y
 
 # Tinker Edge R
@@ -251,8 +251,8 @@ systemctl enable mountboot.service
 bash /etc/init.d/blueman.sh
 rm /etc/init.d/blueman.sh
 
-# Tinker Edge R
-echo $VERSION_NUMBER-$VERSION > /etc/version
+echo $VERSION_NUMBER > /etc/version
+#-------ASUS customization end-------
 
 #---------------Clean--------------
 rm -rf /var/lib/apt/lists/*
