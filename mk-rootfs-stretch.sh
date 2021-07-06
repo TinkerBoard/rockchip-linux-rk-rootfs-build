@@ -236,20 +236,19 @@ rm /lib/systemd/system/wpa_supplicant@.service
 # Remove packages which are not needed.
 apt autoremove -y
 
+bash /etc/init.d/blueman.sh
+rm /etc/init.d/blueman.sh
+
 # Tinker Edge R
 cp /etc/Powermanager/systemd-suspend.service  /lib/systemd/system/systemd-suspend.service
 
-# Tinker Edge R
-if [ "$VERSION" == "debug" ] || [ "$VERSION" == "jenkins" ] ; then
-	systemctl enable test.service
-fi
-
-# Tinker Edge R: Mount partition p7
+# mount partition p7
 systemctl enable mountboot.service
 
-# Tinker Edge R: blueman
-bash /etc/init.d/blueman.sh
-rm /etc/init.d/blueman.sh
+if [ "$VERSION" == "debug" ] ; then
+    # Enable test.service to change the owner for the test tools.
+    systemctl enable test.service
+fi
 
 echo $VERSION_NUMBER > /etc/version
 #-------ASUS customization end-------
