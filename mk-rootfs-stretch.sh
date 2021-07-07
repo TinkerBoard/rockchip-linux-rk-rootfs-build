@@ -239,6 +239,10 @@ apt autoremove -y
 bash /etc/init.d/blueman.sh
 rm /etc/init.d/blueman.sh
 
+# Don't show this on menu for now since it does not work.
+rm /usr/share/applications/squeak.desktop
+
+
 # Tinker Edge R
 cp /etc/Powermanager/systemd-suspend.service  /lib/systemd/system/systemd-suspend.service
 

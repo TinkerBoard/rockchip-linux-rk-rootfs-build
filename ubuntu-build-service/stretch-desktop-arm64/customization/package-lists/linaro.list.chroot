@@ -87,6 +87,8 @@ gstreamer1.0-plugins-good
 gstreamer1.0-tools
 gvfs
 gvfs-backends
+# No arm64
+#hardinfo
 hostapd
 htop
 i2c-tools
@@ -113,7 +115,8 @@ libc6-dev
 libcdio-paranoia1
 libdmx-dev
 libdmx1
-libegl1-mesa-dev
+# Not supported in Stretch
+#libegl1-mesa-dev
 libfontenc-dev
 libfreetype6-dev
 libglib2.0-dev
@@ -173,7 +176,7 @@ lshw
 lsof
 lxde
 lxlauncher
-#lxmusic
+lxmusic
 lxpolkit
 lxsession-default-apps
 lxsession-logout
@@ -245,6 +248,8 @@ scratch
 ssh-import-id
 sshfs
 strace
+# No arm64
+#stressapptest
 sudo
 synaptic
 trace-cmd
