@@ -193,6 +193,9 @@ dpkg -i /packages/xserver/*.deb
 apt-get install -f -y
 # apt-mark hold xserver-common xserver-xorg-core xserver-xorg-legacy
 
+#---------modem manager---------
+apt-get install -f -y modemmanager libqmi-utils libmbim-utils ppp libxml2-utils
+
 #---------------Openbox--------------
 echo -e "\033[36m Install openbox.................... \033[0m"
 # The following package is included in the base system.
