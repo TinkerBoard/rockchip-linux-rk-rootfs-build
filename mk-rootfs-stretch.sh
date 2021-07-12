@@ -186,6 +186,8 @@ echo "deb http://http.debian.net/debian/ buster main contrib non-free" >> /etc/a
 apt-get update
 
 apt-get install -f -y x11proto-dev=2018.4-4 libxcb-xf86dri0-dev:$ARCH qtmultimedia5-examples:$ARCH
+#---------modem manager---------
+apt-get install -f -y modemmanager libqmi-utils libmbim-utils ppp libxml2-utils
 
 #---------update chromium-----
 yes|apt-get install chromium -f -y
