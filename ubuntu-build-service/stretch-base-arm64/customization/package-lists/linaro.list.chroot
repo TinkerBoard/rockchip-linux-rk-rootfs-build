@@ -72,6 +72,8 @@ iw
 kbd
 kmod
 less
+libncurses5-dev
+libncursesw5-dev
 libxatracker2
 #lightdm
 #linaro-artwork
