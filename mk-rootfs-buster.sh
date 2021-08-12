@@ -224,6 +224,9 @@ systemctl enable rockchip.service
 # Enable adbd.service for debug build.
 systemctl enable adbd.service
 
+# dhcpcd
+apt-get install -y dhcpcd5
+
 # mount partition p7
 systemctl enable mountboot.service
 
