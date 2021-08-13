@@ -1,4 +1,4 @@
-/*Tinker-Power-Management Version 1.01*/
+/*Tinker-Power-Management Version 1.02*/
 
 #include <ncurses.h>
 #include <locale.h>
@@ -23,6 +23,9 @@
 #define MAX_A53_FREQ 6
 #define MAX_A72_FREQ 8
 
+#define MAX_GPU_SQ 4
+#define MAX_T86X_FREQ 5
+
 #define SQFORM_WIDTH ((SQ_WIDTH * 5 + LEFT - A_EXTEND - 3) / 5)
 
 WINDOW *BOARDA;
@@ -38,13 +41,18 @@ WINDOW *CPUGOVER[4];
 WINDOW *A53FREQ[6];
 WINDOW *A72FREQ[8];
 
+WINDOW *GPUGOVER[4];
+WINDOW *T86XFREQ[5];
+
 FILE *fp;
 char buffer[50];
-int curr_menu = 0, mode = 0;
-int curr_governor, dirty;
-int switch_tag, curr_tag;
+int curr_cpu_menu = 0,curr_gpu_menu = 0, cpu_mode = 0, gpu_mode = 0;
+int curr_cpu_governor, cpu_dirty;
+int curr_gpu_governor, gpu_dirty;
+int switch_tag, curr_tag, priority = 0;
 
 int a53_min, a53_max, a72_min, a72_max;
+int t86x_min, t86x_max;
 
 int kbhit(void)
 {
@@ -90,7 +98,6 @@ void draw_square_A(void) {
 
 	mvwprintw(BOARDA, 7, 3,"SoC/CPU\t= RK3399PRO");
 
-	//yun
 	fp = popen("cat /proc/meminfo | grep 'MemTotal:' | rev | cut -d ' ' -f2 | rev", "r");
 	memset(buffer, '\0', sizeof(buffer));
 	fgets(buffer, sizeof(buffer), fp);
@@ -164,10 +171,59 @@ void draw_square_A(void) {
 	box(BOARDA, 0, 0);
 }
 
-void draw_square_B(int mode) {
+/* mode: 1 for the page to select governor, so need to flash original governor.
+ * caller: 0 from cpu governor, 1 from gpu governor.				*/
+void draw_square_B(int mode, int caller) {
 	mvwprintw(BOARDB, 1, 2, "System Config");
-	mvwprintw(BOARDB, 3, 3,"CPU:");
 
+	mvwprintw(BOARDB, 13, 3,"GPU:");
+	mvwprintw(BOARDB, 14, 5,"Governor\t= ");
+
+	fp = popen("cat /sys/class/devfreq/ff9a0000.gpu/governor", "r");
+	memset(buffer, '\0', sizeof(buffer));
+	fgets(buffer, sizeof(buffer), fp);
+	pclose(fp);
+
+	if (t86x_min == 200 && t86x_max == 800)
+		gpu_dirty = 0;
+	else
+		gpu_dirty = 1;
+
+	if (!strncmp(buffer, "simple_ondemand", strlen("simple_ondemand"))) {
+		if (curr_gpu_menu)
+			curr_gpu_governor = 1;
+		else if (gpu_dirty == 0)
+			curr_gpu_governor = 0;
+		else {
+			curr_gpu_governor = 1;
+			curr_gpu_menu = 1;
+			priority = 1;
+		}
+	} else if (!strncmp(buffer, "powersave", strlen("powersave")))
+		curr_gpu_governor = 2;
+	else if (!strncmp(buffer, "performance", strlen("performance")))
+		curr_gpu_governor = 3;
+
+	if (mode == 1 && caller == 1)
+		mvwprintw(BOARDB, 14, 18,"            ");
+	else {
+		wattron(BOARDB, A_BOLD);
+
+		switch(curr_gpu_governor) {
+			case 0:
+				mvwprintw(BOARDB, 14, 18,"auto");
+				break;
+			case 1:
+				mvwprintw(BOARDB, 14, 18,"manual");
+				break;
+			default:
+				mvwprintw(BOARDB, 14, 18,"%s", buffer);
+		}
+
+		wattroff(BOARDB, A_BOLD);
+	}
+
+	mvwprintw(BOARDB, 3, 3,"CPU:");
 	mvwprintw(BOARDB, 4, 5,"Governor\t= ");
 
 	fp = popen("cat /sys/devices/system/cpu/cpufreq/policy0/scaling_governor", "r");
@@ -176,30 +232,31 @@ void draw_square_B(int mode) {
 	pclose(fp);
 
 	if (a53_min == 408 && a72_min == 408 && a53_max == 1416 && a72_max == 1800)
-		dirty = 0;
+		cpu_dirty = 0;
 	else
-		dirty = 1;
+		cpu_dirty = 1;
 
 	if (!strncmp(buffer, "ondemand", strlen("ondemand"))) {
-		if (curr_menu)
-			curr_governor = 1;
-		else if (dirty == 0)
-			curr_governor = 0;
+		if (curr_cpu_menu)
+			curr_cpu_governor = 1;
+		else if (cpu_dirty == 0)
+			curr_cpu_governor = 0;
 		else {
-			curr_governor = 1;
-			curr_menu = 1;
+			curr_cpu_governor = 1;
+			curr_cpu_menu = 1;
+			priority = 0;
 		}
 	} else if (!strncmp(buffer, "powersave", strlen("powersave")))
-		curr_governor = 2;
+		curr_cpu_governor = 2;
 	else if (!strncmp(buffer, "performance", strlen("performance")))
-		curr_governor = 3;
+		curr_cpu_governor = 3;
 
-	if (mode == 1)
+	if (mode == 1 && caller == 0)
 		mvwprintw(BOARDB, 4, 18,"            ");
 	else {
 		wattron(BOARDB, A_BOLD);
 
-		switch(curr_governor) {
+		switch(curr_cpu_governor) {
 			case 0:
 				mvwprintw(BOARDB, 4, 18,"auto");
 				break;
@@ -213,8 +270,6 @@ void draw_square_B(int mode) {
 		wattroff(BOARDB, A_BOLD);
 	}
 
-	mvwprintw(BOARDB, 13, 3,"GPU:");
-
 	box(BOARDB, 0, 0);
 }
 
@@ -223,17 +278,17 @@ void draw_square_C(void) {
 	mvwprintw(BOARDC, 3, 3,"CPU:");
 	mvwprintw(BOARDC, 12, 3,"GPU:");
 
-	mvwprintw(BOARDC, 3, SQFORM_WIDTH * 5 + SUB_SHIFT_R * 2, "CPU usage:");
-	mvwprintw(BOARDC, 5, SQFORM_WIDTH * 5 + SUB_SHIFT_R * 2, "[");
-	mvwprintw(BOARDC, 5, SQFORM_WIDTH * 5 + SUB_SHIFT_R * 2 + 51, "]");
+	mvwprintw(BOARDC, 3, SQFORM_WIDTH * 5 + SUB_SHIFT_R * 2 - 2, "CPU usage:");
+	mvwprintw(BOARDC, 5, SQFORM_WIDTH * 5 + SUB_SHIFT_R * 2 - 2, "[");
+	mvwprintw(BOARDC, 5, SQFORM_WIDTH * 5 + SUB_SHIFT_R * 2 - 2 + 51, "]");
 
-	mvwprintw(BOARDC, 7, SQFORM_WIDTH * 5 + SUB_SHIFT_R * 2, "GPU usage:");
-	mvwprintw(BOARDC, 9, SQFORM_WIDTH * 5 + SUB_SHIFT_R * 2, "[");
-	mvwprintw(BOARDC, 9, SQFORM_WIDTH * 5 + SUB_SHIFT_R * 2 + 51, "]");
+	mvwprintw(BOARDC, 7, SQFORM_WIDTH * 5 + SUB_SHIFT_R * 2 - 2, "GPU usage:");
+	mvwprintw(BOARDC, 9, SQFORM_WIDTH * 5 + SUB_SHIFT_R * 2 - 2, "[");
+	mvwprintw(BOARDC, 9, SQFORM_WIDTH * 5 + SUB_SHIFT_R * 2 - 2 + 51, "]");
 
-	mvwprintw(BOARDC, 11, SQFORM_WIDTH * 5 + SUB_SHIFT_R * 2, "Memory usage:");
-	mvwprintw(BOARDC, 13, SQFORM_WIDTH * 5 + SUB_SHIFT_R * 2, "[");
-	mvwprintw(BOARDC, 13, SQFORM_WIDTH * 5 + SUB_SHIFT_R * 2 + 51, "]");
+	mvwprintw(BOARDC, 11, SQFORM_WIDTH * 5 + SUB_SHIFT_R * 2 - 2, "Memory usage:");
+	mvwprintw(BOARDC, 13, SQFORM_WIDTH * 5 + SUB_SHIFT_R * 2 - 2, "[");
+	mvwprintw(BOARDC, 13, SQFORM_WIDTH * 5 + SUB_SHIFT_R * 2 - 2 + 51, "]");
 
 	box(BOARDC, 0, 0);
 }
@@ -447,7 +502,26 @@ void draw_square_FORMBD(int sq) {
 		fgets(buffer, sizeof(buffer), fp);
 		pclose(fp);
 
-		mvwprintw(FORMB[sq], 1, (SQFORM_WIDTH - 3) / 2,"%d", atoi(buffer) / 1000000);
+		t86x_min = atoi(buffer) / 1000000;
+		mvwprintw(FORMB[sq], 1, (SQFORM_WIDTH - 3) / 2,"%d", t86x_min);
+
+		switch (t86x_min) {
+			case 200:
+				curr_tag = 0;
+				break;
+			case 300:
+				curr_tag = 1;
+				break;
+			case 400:
+				curr_tag = 2;
+				break;
+			case 600:
+				curr_tag = 3;
+				break;
+			case 800:
+				curr_tag = 4;
+				break;
+		}
 	} else if (sq == 4) {
 		wborder(FORMB[sq], ACS_VLINE, ACS_VLINE, ACS_HLINE, ACS_HLINE, ACS_TTEE, ACS_URCORNER, ACS_PLUS, ACS_RTEE);
 		wborder(FORMD[sq], ACS_VLINE, ACS_VLINE, ACS_HLINE, ACS_HLINE, ACS_TTEE, ACS_URCORNER, ACS_PLUS, ACS_RTEE);
@@ -463,7 +537,26 @@ void draw_square_FORMBD(int sq) {
 		fgets(buffer, sizeof(buffer), fp);
 		pclose(fp);
 
-		mvwprintw(FORMB[sq], 1, (SQFORM_WIDTH - 3) / 2,"%d", atoi(buffer) / 1000000);
+		t86x_max = atoi(buffer) / 1000000;
+		mvwprintw(FORMB[sq], 1, (SQFORM_WIDTH - 3) / 2,"%d", t86x_max);
+
+		switch (t86x_max) {
+			case 200:
+				curr_tag = 0;
+				break;
+			case 300:
+				curr_tag = 1;
+				break;
+			case 400:
+				curr_tag = 2;
+				break;
+			case 600:
+				curr_tag = 3;
+				break;
+			case 800:
+				curr_tag = 4;
+				break;
+		}
 	}
 }
 
@@ -490,6 +583,31 @@ void draw_square_CPUGOVER(int sq, int mode) {
 			mvwprintw(CPUGOVER[sq], 1, 1, "           ");
 	}
 }
+
+void draw_square_GPUGOVER(int sq, int mode) {
+	if (sq == 0) {
+		if (mode)
+			mvwprintw(GPUGOVER[sq], 1, 1, "auto");
+		else
+			mvwprintw(GPUGOVER[sq], 1, 1, "    ");
+	} else if (sq == 1) {
+		if (mode)
+			mvwprintw(GPUGOVER[sq], 1, 1, "manual");
+		else
+			mvwprintw(GPUGOVER[sq], 1, 1, "      ");
+	} else if (sq == 2) {
+		if (mode)
+			mvwprintw(GPUGOVER[sq], 1, 1, "powersave");
+		else
+			mvwprintw(GPUGOVER[sq], 1, 1, "         ");
+	} else if (sq == 3) {
+		if (mode)
+			mvwprintw(GPUGOVER[sq], 1, 1, "performance");
+		else
+			mvwprintw(GPUGOVER[sq], 1, 1, "           ");
+	}
+}
+
 
 void draw_square_A53FREQ(int sq, int mode) {
 	if (sq == 0) {
@@ -569,29 +687,78 @@ void draw_square_A72FREQ(int sq, int mode) {
 	}
 }
 
+void draw_square_T86XFREQ(int sq, int mode) {
+	if (sq == 0) {
+		if (mode)
+			mvwprintw(T86XFREQ[sq], 1, 1, "200");
+		else
+			mvwprintw(T86XFREQ[sq], 1, 1, "   ");
+	} else if (sq == 1) {
+		if (mode)
+			mvwprintw(T86XFREQ[sq], 1, 1, "300");
+		else
+			mvwprintw(T86XFREQ[sq], 1, 1, "   ");
+	} else if (sq == 2) {
+		if (mode)
+			mvwprintw(T86XFREQ[sq], 1, 1, "400");
+		else
+			mvwprintw(T86XFREQ[sq], 1, 1, "   ");
+	} else if (sq == 3) {
+		if (mode)
+			mvwprintw(T86XFREQ[sq], 1, 1, "600");
+		else
+			mvwprintw(T86XFREQ[sq], 1, 1, "   ");
+	} else if (sq == 4) {
+		if (mode)
+			mvwprintw(T86XFREQ[sq], 1, 1, "800");
+		else
+			mvwprintw(T86XFREQ[sq], 1, 1, "   ");
+	}
+}
+
 void highlight_a53_freq(int sq) {
 	wattron(A53FREQ[sq], A_BOLD);
-	draw_square_A53FREQ(sq, mode);
+	draw_square_A53FREQ(sq, cpu_mode);
 	wattroff(A53FREQ[sq], A_BOLD);
 }
 
 void highlight_a72_freq(int sq) {
         wattron(A72FREQ[sq], A_BOLD);
-        draw_square_A72FREQ(sq, mode);
+        draw_square_A72FREQ(sq, cpu_mode);
         wattroff(A72FREQ[sq], A_BOLD);
 }
 
-void highlight_square(int sq) {
-	wattron(CPUGOVER[sq], A_BOLD);
-	draw_square_CPUGOVER(sq, mode);
-	wattroff(CPUGOVER[sq], A_BOLD);
+void highlight_t86x_freq(int sq) {
+	wattron(T86XFREQ[sq], A_BOLD);
+	draw_square_T86XFREQ(sq, gpu_mode);
+	wattroff(T86XFREQ[sq], A_BOLD);
 }
 
-void highlight_menu(int menu) {
+/* caller: 0 for cpu, 1 for gpu */
+void highlight_square(int sq, int caller) {
+	if (caller) {
+		wattron(GPUGOVER[sq], A_BOLD);
+		draw_square_GPUGOVER(sq, gpu_mode);
+		wattroff(GPUGOVER[sq], A_BOLD);
+	} else {
+		wattron(CPUGOVER[sq], A_BOLD);
+		draw_square_CPUGOVER(sq, cpu_mode);
+		wattroff(CPUGOVER[sq], A_BOLD);
+	}
+}
+
+/* caller: 0 for cpu, 1 for gpu */
+void highlight_menu(int menu, int caller) {
 	if (menu) {
-		wattron(FORMA[menu], A_BOLD);
-		draw_square_FORMAC(menu);
-		wattroff(FORMA[menu], A_BOLD);
+		if (caller) {
+			wattron(FORMB[menu], A_BOLD);
+			draw_square_FORMBD(menu);
+			wattroff(FORMB[menu], A_BOLD);
+		} else {
+			wattron(FORMA[menu], A_BOLD);
+			draw_square_FORMAC(menu);
+			wattroff(FORMA[menu], A_BOLD);
+		}
 	}
 }
 
@@ -623,12 +790,12 @@ void create_board(void) {
 	FORMC[3] = derwin(BOARDC, 3, SQFORM_WIDTH + 1, SUBC_SHIFT_D + 2, SUB_SHIFT_R + SQFORM_WIDTH * 4 + 1 - 2);
 	FORMC[4] = derwin(BOARDC, 3, SQFORM_WIDTH + 1, SUBC_SHIFT_D + 4, SUB_SHIFT_R + SQFORM_WIDTH * 4 + 1 - 2);
 
-	FORMB[0] = derwin(BOARDB, 3, SQFORM_WIDTH * 3, SUBB_SHIFT_D + 9, SUB_SHIFT_R);
-	FORMB[5] = derwin(BOARDB, 3, SQFORM_WIDTH * 3, SUBB_SHIFT_D + 9 + 2, SUB_SHIFT_R);
-	FORMB[3] = derwin(BOARDB, 3, SQFORM_WIDTH, SUBB_SHIFT_D + 9, SUB_SHIFT_R + SQFORM_WIDTH * 3 - 1);
-	FORMB[1] = derwin(BOARDB, 3, SQFORM_WIDTH, SUBB_SHIFT_D + 9 + 2, SUB_SHIFT_R + SQFORM_WIDTH * 3 - 1);
-	FORMB[4] = derwin(BOARDB, 3, SQFORM_WIDTH, SUBB_SHIFT_D + 9, SUB_SHIFT_R + SQFORM_WIDTH * 4 - 2);
-	FORMB[2] = derwin(BOARDB, 3, SQFORM_WIDTH, SUBB_SHIFT_D + 9 + 2, SUB_SHIFT_R + SQFORM_WIDTH * 4 - 2);
+	FORMB[0] = derwin(BOARDB, 3, SQFORM_WIDTH * 3, SUBB_SHIFT_D + 10, SUB_SHIFT_R);
+	FORMB[5] = derwin(BOARDB, 3, SQFORM_WIDTH * 3, SUBB_SHIFT_D + 10 + 2, SUB_SHIFT_R);
+	FORMB[3] = derwin(BOARDB, 3, SQFORM_WIDTH, SUBB_SHIFT_D + 10, SUB_SHIFT_R + SQFORM_WIDTH * 3 - 1);
+	FORMB[1] = derwin(BOARDB, 3, SQFORM_WIDTH, SUBB_SHIFT_D + 10 + 2, SUB_SHIFT_R + SQFORM_WIDTH * 3 - 1);
+	FORMB[4] = derwin(BOARDB, 3, SQFORM_WIDTH, SUBB_SHIFT_D + 10, SUB_SHIFT_R + SQFORM_WIDTH * 4 - 2);
+	FORMB[2] = derwin(BOARDB, 3, SQFORM_WIDTH, SUBB_SHIFT_D + 10 + 2, SUB_SHIFT_R + SQFORM_WIDTH * 4 - 2);
 
 	FORMD[0] = derwin(BOARDC, 3, SQFORM_WIDTH * 3, SUBC_SHIFT_D + 9, SUB_SHIFT_R);
 	FORMD[5] = derwin(BOARDC, 3, SQFORM_WIDTH * 3, SUBC_SHIFT_D + 9 + 2, SUB_SHIFT_R);
@@ -642,11 +809,19 @@ void create_board(void) {
 	CPUGOVER[2] = derwin(BOARDB, 3, sizeof(" powersave "), SUBB_SHIFT_D - 2, 17 + sizeof(" auto ") + sizeof(" manual ") - 2);
 	CPUGOVER[3] = derwin(BOARDB, 3, sizeof(" performance "), SUBB_SHIFT_D - 2, 17 + sizeof(" auto ") + sizeof(" manual ") + sizeof(" powersave ") - 3);
 
+	GPUGOVER[0] = derwin(BOARDB, 3, sizeof(" auto "), SUBB_SHIFT_D + 8, 17);
+	GPUGOVER[1] = derwin(BOARDB, 3, sizeof(" manual "), SUBB_SHIFT_D + 8, 17 + sizeof(" auto ") - 1);
+	GPUGOVER[2] = derwin(BOARDB, 3, sizeof(" powersave "), SUBB_SHIFT_D + 8, 17 + sizeof(" auto ") + sizeof(" manual ") - 2);
+	GPUGOVER[3] = derwin(BOARDB, 3, sizeof(" performance "), SUBB_SHIFT_D + 8, 17 + sizeof(" auto ") + sizeof(" manual ") + sizeof(" powersave ") - 3);
+
 	for (i = 0; i < 6; i++)			// sizeof(" xxxx ")
 		A53FREQ[i] = derwin(BOARDB, 3, 6, SUBB_SHIFT_D + 6, SUB_SHIFT_R + i * 6 - i);
 
 	for (i = 0; i < 8; i++)			// sizeof(" xxxx ")
 		A72FREQ[i] = derwin(BOARDB, 3, 6, SUBB_SHIFT_D + 6, SUB_SHIFT_R + i * 6 - i);
+
+	for (i = 0; i < 5; i++)			// sizeof(" xxx ")
+		T86XFREQ[i] = derwin(BOARDB, 3, 5, SUBB_SHIFT_D + 6, SUB_SHIFT_R + i * 5 - i);
 
 	draw_square_A();
 	draw_square_C();
@@ -656,8 +831,12 @@ void create_board(void) {
 	for (i = 5; i >= 0; i--)
 		draw_square_FORMBD(i);
 
-	draw_square_B(mode);
-	highlight_menu(curr_menu);
+	draw_square_B( 0, 2);
+
+	if (priority)
+		highlight_menu(curr_gpu_menu, priority);
+	else
+		highlight_menu(curr_cpu_menu, priority);
 }
 
 void cpu_info(void) {
@@ -692,9 +871,9 @@ void cpu_info(void) {
 
 	for (reg = 1; reg <= 50; reg++) {
 		if (reg > atoi(buffer) / 2)
-			mvwprintw(BOARDC, 5, SQFORM_WIDTH * 5 + SUB_SHIFT_R * 2 + reg, " ");
+			mvwprintw(BOARDC, 5, SQFORM_WIDTH * 5 + SUB_SHIFT_R * 2 - 2 + reg, " ");
 		else
-			mvwprintw(BOARDC, 5, SQFORM_WIDTH * 5 + SUB_SHIFT_R * 2 + reg, "#");
+			mvwprintw(BOARDC, 5, SQFORM_WIDTH * 5 + SUB_SHIFT_R * 2 - 2 + reg, "#");
 	}
 }
 
@@ -723,9 +902,9 @@ void gpu_info(void) {
 
 	for (reg = 1; reg <= 50; reg++) {
 		if (reg > atoi(buffer) / 2)
-			mvwprintw(BOARDC, 9, SQFORM_WIDTH * 5 + SUB_SHIFT_R * 2 + reg, " ");
+			mvwprintw(BOARDC, 9, SQFORM_WIDTH * 5 + SUB_SHIFT_R * 2 - 2 + reg, " ");
 		else
-			mvwprintw(BOARDC, 9, SQFORM_WIDTH * 5 + SUB_SHIFT_R * 2 + reg, "#");
+			mvwprintw(BOARDC, 9, SQFORM_WIDTH * 5 + SUB_SHIFT_R * 2 - 2 + reg, "#");
 	}
 }
 
@@ -781,9 +960,9 @@ void ddr_info(void) {
 
 	for (reg = 1; reg <= 50; reg++) {
 		if (reg > mem_usage / 2)
-			mvwprintw(BOARDC, 13, SQFORM_WIDTH * 5 + SUB_SHIFT_R * 2 + reg, " ");
+			mvwprintw(BOARDC, 13, SQFORM_WIDTH * 5 + SUB_SHIFT_R * 2 - 2 + reg, " ");
 		else
-			mvwprintw(BOARDC, 13, SQFORM_WIDTH * 5 + SUB_SHIFT_R * 2 + reg, "#");
+			mvwprintw(BOARDC, 13, SQFORM_WIDTH * 5 + SUB_SHIFT_R * 2 - 2 + reg, "#");
 	}
 }
 
@@ -813,7 +992,7 @@ int main() {
 
 	while (1) {
 		if (!kbhit()) {
-			if (mode == 1) {
+			if (cpu_mode == 1 || gpu_mode == 1) {
 				if (LINES > 40)
 					mvprintw(LINES - 1, 0, "Press Left or Right keys to select the governor and Space key to save. Press Q to quit and go back.                       ");
 				else if (LINES == 40) {
@@ -821,21 +1000,21 @@ int main() {
 					mvprintw(LINES - 1, 0, "Press Left or Right keys to select the governor and Space key to save. Press Q to quit and go back.");
 					wrefresh(BOARDC);
 				}
-			} else if (mode == 0) {
-				if (curr_governor == 1) {
+			} else if (cpu_mode == 0 && gpu_mode == 0) {
+				if (curr_cpu_governor == 1 || curr_gpu_governor == 1) {
 					if (LINES > 40)
-						mvprintw(LINES - 1, 0, "Press C to change governor or Ctrl + C to exit. Use Arrow keys to move to the frequency to change and Space key to select.");
+						mvprintw(LINES - 1, 0, "Press (C)PU or (G)PU to change governor, Ctrl + C to exit. Use Arrow keys and Space key to select the frequency to change.");
 					else if (LINES == 40) {
 						box(BOARDC, 0, 0);
-						mvprintw(LINES - 1, 0, "Press C to change governor or Ctrl + C to exit. Use Arrow keys to move to the frequency to change and Space key to select.");
+						mvprintw(LINES - 1, 0, "Press (C)PU or (G)PU to change governor, Ctrl + C to exit. Use Arrow keys and Space key to select the frequency to change.");
 						wrefresh(BOARDC);
 					}
 				} else {
 					if (LINES > 40)
-						mvprintw(LINES - 1, 0, "Press C to change governor or Ctrl + C to exit.                                                                           ");
+						mvprintw(LINES - 1, 0, "Press (C)PU or (G)PU to change governor, Ctrl + C to exit.                                                                ");
 					else if (LINES == 40) {
 						box(BOARDC, 0, 0);
-						mvprintw(LINES - 1, 0, "Press C to change governor or Ctrl + C to exit.");
+						mvprintw(LINES - 1, 0, "Press (C)PU or (G)PU to change governor, Ctrl + C to exit.");
 						wrefresh(BOARDC);
 					}
 				}
@@ -857,9 +1036,9 @@ int main() {
 		} else {
 			key = getchar();
 
-			if (mode == 1) {
+			if (cpu_mode == 1) {
 				if (key == ' ') {
-					if (switch_tag != 1 && dirty == 1) {
+					if (switch_tag != 1 && cpu_dirty == 1) {
 						fp = popen("sudo su -c \"echo 408000 > /sys/devices/system/cpu/cpufreq/policy0/scaling_min_freq\"", "r");
 						pclose(fp);
 
@@ -890,7 +1069,7 @@ int main() {
 
 					switch(switch_tag) {
 						case 0:
-							curr_menu = 0;
+							curr_cpu_menu = 0;
 
 							fp = popen("sudo su -c \"echo ondemand > /sys/devices/system/cpu/cpufreq/policy0/scaling_governor\"", "r");
 							pclose(fp);
@@ -898,15 +1077,16 @@ int main() {
 							fp = popen("sudo su -c \"echo ondemand > /sys/devices/system/cpu/cpufreq/policy4/scaling_governor\"", "r");
 							pclose(fp);
 
-							fp = popen("sudo sed -i 's/\\(governor=\\).*/\\1ondemand/g' /boot/config.txt", "r");
+							fp = popen("sudo sed -i 's/\\(cpu_governor=\\).*/\\1ondemand/g' /boot/config.txt", "r");
 							pclose(fp);
 
 							fp = popen("sudo su -c \"echo enabled > /sys/class/thermal/thermal_zone0/mode\"", "r");
 							pclose(fp);
 							break;
 						case 1:
-							curr_menu = 1;
-							highlight_menu(curr_menu);
+							curr_cpu_menu = 1;
+							priority = 0;
+							highlight_menu(curr_cpu_menu, priority);
 
 							fp = popen("sudo su -c \"echo ondemand > /sys/devices/system/cpu/cpufreq/policy0/scaling_governor\"", "r");
 							pclose(fp);
@@ -914,14 +1094,14 @@ int main() {
 							fp = popen("sudo su -c \"echo ondemand > /sys/devices/system/cpu/cpufreq/policy4/scaling_governor\"", "r");
 							pclose(fp);
 
-							fp = popen("sudo sed -i 's/\\(governor=\\).*/\\1ondemand/g' /boot/config.txt", "r");
+							fp = popen("sudo sed -i 's/\\(cpu_governor=\\).*/\\1ondemand/g' /boot/config.txt", "r");
 							pclose(fp);
 
 							fp = popen("sudo su -c \"echo enabled > /sys/class/thermal/thermal_zone0/mode\"", "r");
 							pclose(fp);
 							break;
 						case 2:
-							curr_menu = 0;
+							curr_cpu_menu = 0;
 
 							fp = popen("sudo su -c \"echo powersave > /sys/devices/system/cpu/cpufreq/policy0/scaling_governor\"", "r");
 							pclose(fp);
@@ -929,14 +1109,14 @@ int main() {
 							fp = popen("sudo su -c \"echo powersave > /sys/devices/system/cpu/cpufreq/policy4/scaling_governor\"", "r");
 							pclose(fp);
 
-							fp = popen("sudo sed -i 's/\\(governor=\\).*/\\1powersave/g' /boot/config.txt", "r");
+							fp = popen("sudo sed -i 's/\\(cpu_governor=\\).*/\\1powersave/g' /boot/config.txt", "r");
 							pclose(fp);
 
 							fp = popen("sudo su -c \"echo enabled > /sys/class/thermal/thermal_zone0/mode\"", "r");
 							pclose(fp);
 							break;
 						case 3:
-							curr_menu = 0;
+							curr_cpu_menu = 0;
 
 							fp = popen("sudo su -c \"echo performance > /sys/devices/system/cpu/cpufreq/policy0/scaling_governor\"", "r");
 							pclose(fp);
@@ -944,7 +1124,7 @@ int main() {
 							fp = popen("sudo su -c \"echo performance > /sys/devices/system/cpu/cpufreq/policy4/scaling_governor\"", "r");
 							pclose(fp);
 
-							fp = popen("sudo sed -i 's/\\(governor=\\).*/\\1performance/g' /boot/config.txt", "r");
+							fp = popen("sudo sed -i 's/\\(cpu_governor=\\).*/\\1performance/g' /boot/config.txt", "r");
 							pclose(fp);
 
 							fp = popen("sudo su -c \"echo disabled > /sys/class/thermal/thermal_zone0/mode\"", "r");
@@ -960,45 +1140,50 @@ int main() {
 				}
 
 				if (key == 'q' || key == ' ') {
-					mode = 0;
+					cpu_mode = 0;
 
 					for (i = 0; i < 4; i++)
-						draw_square_CPUGOVER(i, mode);
-					draw_square_B(mode);
-					highlight_menu(curr_menu);
+						draw_square_CPUGOVER(i, cpu_mode);
+					draw_square_B(cpu_mode, 0);
+					highlight_menu(curr_cpu_menu, 0);
+
+					if (curr_cpu_governor != 1 && curr_gpu_governor == 1) {
+						priority = 1;
+						highlight_menu(curr_gpu_menu, priority);
+					}
 				} else if (key == 'C') {	//right
-					draw_square_CPUGOVER(switch_tag, mode);
+					draw_square_CPUGOVER(switch_tag, cpu_mode);
 
 					if (switch_tag < MAX_CPU_SQ - 1)
-						highlight_square(++switch_tag);
+						highlight_square(++switch_tag, 0);
 					else {
 						switch_tag = 0;
-						highlight_square(switch_tag);
+						highlight_square(switch_tag, 0);
 					}
 				} else if (key == 'D') {	//left
-					draw_square_CPUGOVER(switch_tag, mode);
+					draw_square_CPUGOVER(switch_tag, cpu_mode);
 
 					if (switch_tag > 0)
-						highlight_square(--switch_tag);
+						highlight_square(--switch_tag, 0);
 					else {
 						switch_tag = MAX_CPU_SQ - 1;
-						highlight_square(switch_tag);
+						highlight_square(switch_tag, 0);
 					}
 				}
-			} else if (mode == 2 || mode == 4) {
+			} else if (cpu_mode == 2 || cpu_mode == 4) {
 				if (key == ' ') {
-					dirty = 1;
+					cpu_dirty = 1;
 					switch(switch_tag) {
 						case 0:
-							if (mode == 2 && a53_max >= 408 ) {
+							if (cpu_mode == 2 && a53_max >= 408 ) {
 								fp = popen("sudo su -c \"echo 408000 > /sys/devices/system/cpu/cpufreq/policy0/scaling_min_freq\"", "r");
 								pclose(fp);
 
 								fp = popen("sudo sed -i 's/\\(a53_minfreq=\\).*/\\1408000/g' /boot/config.txt", "r");
 								pclose(fp);
 
-								dirty = 0;
-							} else if (mode == 4 && a53_min <= 408) {
+								cpu_dirty = 0;
+							} else if (cpu_mode == 4 && a53_min <= 408) {
 								fp = popen("sudo su -c \"echo 408000 > /sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq\"", "r");
 								pclose(fp);
 
@@ -1007,13 +1192,13 @@ int main() {
 							}
 							break;
 						case 1:
-							if (mode == 2 && a53_max >= 600 ) {
+							if (cpu_mode == 2 && a53_max >= 600 ) {
 								fp = popen("sudo su -c \"echo 600000 > /sys/devices/system/cpu/cpufreq/policy0/scaling_min_freq\"", "r");
 								pclose(fp);
 
 								fp = popen("sudo sed -i 's/\\(a53_minfreq=\\).*/\\1600000/g' /boot/config.txt", "r");
 								pclose(fp);
-							} else if (mode == 4 && a53_min <= 600) {
+							} else if (cpu_mode == 4 && a53_min <= 600) {
 								fp = popen("sudo su -c \"echo 600000 > /sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq\"", "r");
 								pclose(fp);
 
@@ -1022,13 +1207,13 @@ int main() {
 							}
 							break;
 						case 2:
-							if (mode == 2 && a53_max >= 816 ) {
+							if (cpu_mode == 2 && a53_max >= 816 ) {
 								fp = popen("sudo su -c \"echo 816000 > /sys/devices/system/cpu/cpufreq/policy0/scaling_min_freq\"", "r");
 								pclose(fp);
 
 								fp = popen("sudo sed -i 's/\\(a53_minfreq=\\).*/\\1816000/g' /boot/config.txt", "r");
 								pclose(fp);
-							} else if (mode == 4 && a53_min <= 816) {
+							} else if (cpu_mode == 4 && a53_min <= 816) {
 								fp = popen("sudo su -c \"echo 816000 > /sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq\"", "r");
 								pclose(fp);
 
@@ -1037,13 +1222,13 @@ int main() {
 							}
 							break;
 						case 3:
-							if (mode == 2 && a53_max >= 1008 ) {
+							if (cpu_mode == 2 && a53_max >= 1008 ) {
 								fp = popen("sudo su -c \"echo 1008000 > /sys/devices/system/cpu/cpufreq/policy0/scaling_min_freq\"", "r");
 								pclose(fp);
 
 								fp = popen("sudo sed -i 's/\\(a53_minfreq=\\).*/\\11008000/g' /boot/config.txt", "r");
 								pclose(fp);
-							} else if (mode == 4 && a53_min <= 1008) {
+							} else if (cpu_mode == 4 && a53_min <= 1008) {
 								fp = popen("sudo su -c \"echo 1008000 > /sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq\"", "r");
 								pclose(fp);
 
@@ -1052,13 +1237,13 @@ int main() {
 							}
 							break;
 						case 4:
-							if (mode == 2 && a53_max >= 1200 ) {
+							if (cpu_mode == 2 && a53_max >= 1200 ) {
 								fp = popen("sudo su -c \"echo 1200000 > /sys/devices/system/cpu/cpufreq/policy0/scaling_min_freq\"", "r");
 								pclose(fp);
 
 								fp = popen("sudo sed -i 's/\\(a53_minfreq=\\).*/\\11200000/g' /boot/config.txt", "r");
 								pclose(fp);
-							} else if (mode == 4 && a53_min <= 1200) {
+							} else if (cpu_mode == 4 && a53_min <= 1200) {
 								fp = popen("sudo su -c \"echo 1200000 > /sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq\"", "r");
 								pclose(fp);
 
@@ -1067,33 +1252,33 @@ int main() {
 							}
 							break;
 						case 5:
-							if (mode == 2 && a53_max >= 1416 ) {
+							if (cpu_mode == 2 && a53_max >= 1416 ) {
 								fp = popen("sudo su -c \"echo 1416000 > /sys/devices/system/cpu/cpufreq/policy0/scaling_min_freq\"", "r");
 								pclose(fp);
 
 								fp = popen("sudo sed -i 's/\\(a53_minfreq=\\).*/\\11416000/g' /boot/config.txt", "r");
 								pclose(fp);
-							} else if (mode == 4 && a53_min <= 1416) {
+							} else if (cpu_mode == 4 && a53_min <= 1416) {
 								fp = popen("sudo su -c \"echo 1416000 > /sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq\"", "r");
 								pclose(fp);
 
 								fp = popen("sudo sed -i 's/\\(a53_maxfreq=\\).*/\\11416000/g' /boot/config.txt", "r");
 								pclose(fp);
 
-								dirty = 0;
+								cpu_dirty = 0;
 							}
 							break;
 					}
 				}
 
 				if (key == 'q' || key == ' ') {
-					mode = 0;
+					cpu_mode = 0;
 
 					for (i = 0; i < MAX_A53_FREQ; i++)
-						draw_square_A53FREQ(i, mode);
-					highlight_menu(curr_menu);
+						draw_square_A53FREQ(i, cpu_mode);
+					highlight_menu(curr_cpu_menu, 0);
 				} else if (key == 'C') {        //right
-					draw_square_A53FREQ(switch_tag, mode);
+					draw_square_A53FREQ(switch_tag, cpu_mode);
 
 					if (switch_tag < MAX_A53_FREQ - 1)
 						highlight_a53_freq(++switch_tag);
@@ -1102,7 +1287,7 @@ int main() {
 						highlight_a53_freq(switch_tag);
 					}
 				} else if (key == 'D') {        //left
-					draw_square_A53FREQ(switch_tag, mode);
+					draw_square_A53FREQ(switch_tag, cpu_mode);
 
 					if (switch_tag > 0)
 						highlight_a53_freq(--switch_tag);
@@ -1111,20 +1296,20 @@ int main() {
 						highlight_a53_freq(switch_tag);
 					}
 				}
-			}else if (mode == 3 || mode == 5) {
+			} else if (cpu_mode == 3 || cpu_mode == 5) {
 				if (key == ' ') {
-					dirty = 1;
+					cpu_dirty = 1;
 					switch(switch_tag) {
 						case 0:
-							if (mode == 3 && a72_max >= 408 ) {
+							if (cpu_mode == 3 && a72_max >= 408 ) {
 								fp = popen("sudo su -c \"echo 408000 > /sys/devices/system/cpu/cpufreq/policy4/scaling_min_freq\"", "r");
 								pclose(fp);
 
 								fp = popen("sudo sed -i 's/\\(a72_minfreq=\\).*/\\1408000/g' /boot/config.txt", "r");
 								pclose(fp);
 
-								dirty = 0;
-							} else if (mode == 5 && a72_min <= 408) {
+								cpu_dirty = 0;
+							} else if (cpu_mode == 5 && a72_min <= 408) {
 								fp = popen("sudo su -c \"echo 408000 > /sys/devices/system/cpu/cpufreq/policy4/scaling_max_freq\"", "r");
 								pclose(fp);
 
@@ -1133,13 +1318,13 @@ int main() {
 							}
 							break;
 						case 1:
-							if (mode == 3 && a72_max >= 600 ) {
+							if (cpu_mode == 3 && a72_max >= 600 ) {
 								fp = popen("sudo su -c \"echo 600000 > /sys/devices/system/cpu/cpufreq/policy4/scaling_min_freq\"", "r");
 								pclose(fp);
 
 								fp = popen("sudo sed -i 's/\\(a72_minfreq=\\).*/\\1600000/g' /boot/config.txt", "r");
 								pclose(fp);
-							} else if (mode == 5 && a72_min <= 600) {
+							} else if (cpu_mode == 5 && a72_min <= 600) {
 								fp = popen("sudo su -c \"echo 600000 > /sys/devices/system/cpu/cpufreq/policy4/scaling_max_freq\"", "r");
 								pclose(fp);
 
@@ -1148,13 +1333,13 @@ int main() {
 							}
 							break;
 						case 2:
-							if (mode == 3 && a72_max >= 816 ) {
+							if (cpu_mode == 3 && a72_max >= 816 ) {
 								fp = popen("sudo su -c \"echo 816000 > /sys/devices/system/cpu/cpufreq/policy4/scaling_min_freq\"", "r");
 								pclose(fp);
 
 								fp = popen("sudo sed -i 's/\\(a72_minfreq=\\).*/\\1816000/g' /boot/config.txt", "r");
 								pclose(fp);
-							} else if (mode == 5 && a72_min <= 816) {
+							} else if (cpu_mode == 5 && a72_min <= 816) {
 								fp = popen("sudo su -c \"echo 816000 > /sys/devices/system/cpu/cpufreq/policy4/scaling_max_freq\"", "r");
 								pclose(fp);
 
@@ -1163,13 +1348,13 @@ int main() {
 							}
 							break;
 						case 3:
-							if (mode == 3 && a72_max >= 1008 ) {
+							if (cpu_mode == 3 && a72_max >= 1008 ) {
 								fp = popen("sudo su -c \"echo 1008000 > /sys/devices/system/cpu/cpufreq/policy4/scaling_min_freq\"", "r");
 								pclose(fp);
 
 								fp = popen("sudo sed -i 's/\\(a72_minfreq=\\).*/\\11008000/g' /boot/config.txt", "r");
 								pclose(fp);
-							} else if (mode == 5 && a72_min <= 1008) {
+							} else if (cpu_mode == 5 && a72_min <= 1008) {
 								fp = popen("sudo su -c \"echo 1008000 > /sys/devices/system/cpu/cpufreq/policy4/scaling_max_freq\"", "r");
 								pclose(fp);
 
@@ -1178,13 +1363,13 @@ int main() {
 							}
 							break;
 						case 4:
-							if (mode == 3 && a72_max >= 1200 ) {
+							if (cpu_mode == 3 && a72_max >= 1200 ) {
 								fp = popen("sudo su -c \"echo 1200000 > /sys/devices/system/cpu/cpufreq/policy4/scaling_min_freq\"", "r");
 								pclose(fp);
 
 								fp = popen("sudo sed -i 's/\\(a72_minfreq=\\).*/\\11200000/g' /boot/config.txt", "r");
 								pclose(fp);
-							} else if (mode == 5 && a72_min <= 1200) {
+							} else if (cpu_mode == 5 && a72_min <= 1200) {
 								fp = popen("sudo su -c \"echo 1200000 > /sys/devices/system/cpu/cpufreq/policy4/scaling_max_freq\"", "r");
 								pclose(fp);
 
@@ -1193,13 +1378,13 @@ int main() {
 							}
 							break;
 						case 5:
-							if (mode == 3 && a72_max >= 1416 ) {
+							if (cpu_mode == 3 && a72_max >= 1416 ) {
 								fp = popen("sudo su -c \"echo 1416000 > /sys/devices/system/cpu/cpufreq/policy4/scaling_min_freq\"", "r");
 								pclose(fp);
 
 								fp = popen("sudo sed -i 's/\\(a72_minfreq=\\).*/\\11416000/g' /boot/config.txt", "r");
 								pclose(fp);
-							} else if (mode == 5 && a72_min <= 1416) {
+							} else if (cpu_mode == 5 && a72_min <= 1416) {
 								fp = popen("sudo su -c \"echo 1416000 > /sys/devices/system/cpu/cpufreq/policy4/scaling_max_freq\"", "r");
 								pclose(fp);
 
@@ -1208,13 +1393,13 @@ int main() {
 							}
 							break;
 						case 6:
-							if (mode == 3 && a72_max >= 1608 ) {
+							if (cpu_mode == 3 && a72_max >= 1608 ) {
 								fp = popen("sudo su -c \"echo 1608000 > /sys/devices/system/cpu/cpufreq/policy4/scaling_min_freq\"", "r");
 								pclose(fp);
 
 								fp = popen("sudo sed -i 's/\\(a72_minfreq=\\).*/\\11608000/g' /boot/config.txt", "r");
 								pclose(fp);
-							} else if (mode == 5 && a72_min <= 1608) {
+							} else if (cpu_mode == 5 && a72_min <= 1608) {
 								fp = popen("sudo su -c \"echo 1608000 > /sys/devices/system/cpu/cpufreq/policy4/scaling_max_freq\"", "r");
 								pclose(fp);
 
@@ -1223,33 +1408,33 @@ int main() {
 							}
 							break;
 						case 7:
-							if (mode == 3 && a72_max >= 1800 ) {
+							if (cpu_mode == 3 && a72_max >= 1800 ) {
 								fp = popen("sudo su -c \"echo 1800000 > /sys/devices/system/cpu/cpufreq/policy4/scaling_min_freq\"", "r");
 								pclose(fp);
 
 								fp = popen("sudo sed -i 's/\\(a72_minfreq=\\).*/\\11800000/g' /boot/config.txt", "r");
 								pclose(fp);
-							} else if (mode == 5 && a72_min <= 1800) {
+							} else if (cpu_mode == 5 && a72_min <= 1800) {
 								fp = popen("sudo su -c \"echo 1800000 > /sys/devices/system/cpu/cpufreq/policy4/scaling_max_freq\"", "r");
 								pclose(fp);
 
 								fp = popen("sudo sed -i 's/\\(a72_maxfreq=\\).*/\\11800000/g' /boot/config.txt", "r");
 								pclose(fp);
 
-								dirty = 0;
+								cpu_dirty = 0;
 							}
 							break;
 					}
 				}
 
 				if (key == 'q' || key == ' ') {
-					mode = 0;
+					cpu_mode = 0;
 
 					for (i = 0; i < 9; i++)
-						draw_square_A72FREQ(i, mode);
-					highlight_menu(curr_menu);
+						draw_square_A72FREQ(i, cpu_mode);
+					highlight_menu(curr_cpu_menu, 0);
 				} else if (key == 'C') {	//right
-					draw_square_A72FREQ(switch_tag, mode);
+					draw_square_A72FREQ(switch_tag, cpu_mode);
 
 					if (switch_tag < MAX_A72_FREQ - 1)
 						highlight_a72_freq(++switch_tag);
@@ -1258,7 +1443,7 @@ int main() {
 						highlight_a72_freq(switch_tag);
 					}
 				} else if (key == 'D') {	//left
-					draw_square_A72FREQ(switch_tag, mode);
+					draw_square_A72FREQ(switch_tag, cpu_mode);
 
 					if (switch_tag > 0)
 						highlight_a72_freq(--switch_tag);
@@ -1267,77 +1452,426 @@ int main() {
 						highlight_a72_freq(switch_tag);
 					}
 				}
-			} else if (mode == 0) {
+			} else if (cpu_mode == 0 && gpu_mode == 0) {
 				if (key == 'c') {
-					mode = 1;
+					cpu_mode = 1;
+					priority = 0;
 
-					draw_square_B(mode);
+					draw_square_B(cpu_mode, 0);
 
 					for (i = 0; i < 4; i++)
-						draw_square_CPUGOVER(i, mode);
+						draw_square_CPUGOVER(i, cpu_mode);
 
 					for (i = 1; i <= 4; i++)
 						draw_square_FORMAC(i);
 
-					highlight_square(curr_governor);
+					for (i = 1; i <= 2; i++)
+						draw_square_FORMBD(i);
 
-					switch_tag = curr_governor;
-				} else if (curr_governor == 1) {
-					if (key == 'A' || key == 'B') {	//up, down
-						draw_square_FORMAC(curr_menu);
+					highlight_square(curr_cpu_governor, priority);
 
-						if (curr_menu == 1)
-							curr_menu = 2;
-						else if (curr_menu == 2)
-							curr_menu = 1;
-						else if (curr_menu == 3)
-							curr_menu = 4;
-						else if (curr_menu == 4)
-							curr_menu = 3;
+					switch_tag = curr_cpu_governor;
+				} else if (key == 'g') {
+					gpu_mode = 1;
+					priority = 1;
 
-						highlight_menu(curr_menu);
-					} else if (key == 'C' || key == 'D') {	//left, right
-						draw_square_FORMAC(curr_menu);
+					draw_square_B(gpu_mode, 1);
 
-						if (curr_menu == 1)
-							curr_menu = 3;
-						else if (curr_menu == 3)
-							curr_menu = 1;
-						else if (curr_menu == 2)
-							curr_menu = 4;
-						else if (curr_menu == 4)
-							curr_menu = 2;
+					for (i = 0; i < 4; i++)
+						draw_square_GPUGOVER(i, gpu_mode);
 
-						highlight_menu(curr_menu);
-					} else if (key == ' ') {
-						mode = curr_menu + 1;
+					for (i = 1; i <= 2; i++)
+						draw_square_FORMBD(i);
 
-						switch(curr_menu) {
-							case 0:
-								draw_square_B(mode);
+					for (i = 1; i <= 4; i++)
+						draw_square_FORMAC(i);
 
-								for (i = 0; i < 4; i++)
-									draw_square_CPUGOVER(i, mode);
+					highlight_square(curr_gpu_governor, priority);
 
-								highlight_square(curr_tag);
-								break;
-							case 1:
-							case 3:
-								for (i = 0; i < MAX_A53_FREQ; i++)
-									draw_square_A53FREQ(i, mode);
+					switch_tag = curr_gpu_governor;
+				} else if (key == ' ') {
+					if (curr_cpu_governor == 1 || curr_gpu_governor == 1) {
+						if (priority) {
+							gpu_mode = curr_gpu_menu + 1;
 
-								highlight_a53_freq(curr_tag);
-								break;
-							case 2:
-							case 4:
-								for (i = 0; i < MAX_A72_FREQ; i++)
-									draw_square_A72FREQ(i, mode);
+							switch(curr_gpu_menu) {
+								case 1:
+								case 2:
+									for (i = 0; i < MAX_T86X_FREQ; i++)
+										draw_square_T86XFREQ(i, gpu_mode);
 
-								highlight_a72_freq(curr_tag);
-								break;
+									highlight_t86x_freq(curr_tag);
+									break;
+							}
+
+							switch_tag = curr_tag;
+						} else {
+							cpu_mode = curr_cpu_menu + 1;
+
+							switch(curr_cpu_menu) {
+								case 1:
+								case 3:
+									for (i = 0; i < MAX_A53_FREQ; i++)
+										draw_square_A53FREQ(i, cpu_mode);
+
+									highlight_a53_freq(curr_tag);
+									break;
+								case 2:
+								case 4:
+									for (i = 0; i < MAX_A72_FREQ; i++)
+										draw_square_A72FREQ(i, cpu_mode);
+
+									highlight_a72_freq(curr_tag);
+									break;
+							}
+
+							switch_tag = curr_tag;
+						}
+					}
+				} else if (curr_cpu_governor == 1 && curr_gpu_governor == 1) {
+
+					if (key == 'A') {	//up
+						if (priority) {
+							draw_square_FORMBD(curr_gpu_menu);
+
+							if (curr_gpu_menu == 1) {
+								curr_cpu_menu = 2;
+								priority = 0;
+							} else if (curr_gpu_menu == 2) {
+								curr_cpu_menu = 4;
+								priority = 0;
+							}
+						} else {
+							draw_square_FORMAC(curr_cpu_menu);
+
+							if (curr_cpu_menu == 1) {
+								curr_gpu_menu = 1;
+								priority = 1;
+							} else if (curr_cpu_menu == 2) {
+								curr_cpu_menu = 1;
+							} else if (curr_cpu_menu == 3) {
+								curr_gpu_menu = 2;
+								priority = 1;
+							} else if (curr_cpu_menu == 4) {
+								curr_cpu_menu = 3;
+							}
 						}
 
-						switch_tag = curr_tag;
+						if (priority)
+							highlight_menu(curr_gpu_menu, priority);
+						else
+							highlight_menu(curr_cpu_menu, priority);
+
+					} else if (key == 'B') {	//down
+						if (priority) {
+							draw_square_FORMBD(curr_gpu_menu);
+
+							if (curr_gpu_menu == 1) {
+								curr_cpu_menu = 1;
+								priority = 0;
+							} else if (curr_gpu_menu == 2) {
+								curr_cpu_menu = 3;
+								priority = 0;
+							}
+						} else {
+							draw_square_FORMAC(curr_cpu_menu);
+
+							if (curr_cpu_menu == 1) {
+								curr_cpu_menu = 2;
+							} else if (curr_cpu_menu == 2) {
+								curr_gpu_menu = 1;
+								priority = 1;
+							} else if (curr_cpu_menu == 3) {
+								curr_cpu_menu = 4;
+							} else if (curr_cpu_menu == 4) {
+								curr_gpu_menu = 2;
+								priority = 1;
+							}
+						}
+
+						if (priority)
+							highlight_menu(curr_gpu_menu, priority);
+						else
+							highlight_menu(curr_cpu_menu, priority);
+
+					} else if (key == 'C' || key == 'D') {
+						if (priority) {
+							draw_square_FORMBD(curr_gpu_menu);
+
+							if (curr_gpu_menu == 1)
+								curr_gpu_menu = 2;
+							else if (curr_gpu_menu == 2)
+								curr_gpu_menu = 1;
+
+							highlight_menu(curr_gpu_menu, priority);
+						} else {
+							draw_square_FORMAC(curr_cpu_menu);
+
+							if (curr_cpu_menu == 1)
+								curr_cpu_menu = 3;
+							else if (curr_cpu_menu == 3)
+								curr_cpu_menu = 1;
+							else if (curr_cpu_menu == 2)
+								curr_cpu_menu = 4;
+							else if (curr_cpu_menu == 4)
+								curr_cpu_menu = 2;
+
+							highlight_menu(curr_cpu_menu, priority);
+						}
+					}
+				} else if (curr_cpu_governor == 1) {
+					if (key == 'A' || key == 'B') {		//up, down
+						draw_square_FORMAC(curr_cpu_menu);
+
+						if (curr_cpu_menu == 1)
+							curr_cpu_menu = 2;
+						else if (curr_cpu_menu == 2)
+							curr_cpu_menu = 1;
+						else if (curr_cpu_menu == 3)
+							curr_cpu_menu = 4;
+						else if (curr_cpu_menu == 4)
+							curr_cpu_menu = 3;
+
+						highlight_menu(curr_cpu_menu, 0);
+					} else if (key == 'C' || key == 'D') {	//left, right
+						draw_square_FORMAC(curr_cpu_menu);
+
+						if (curr_cpu_menu == 1)
+							curr_cpu_menu = 3;
+						else if (curr_cpu_menu == 3)
+							curr_cpu_menu = 1;
+						else if (curr_cpu_menu == 2)
+							curr_cpu_menu = 4;
+						else if (curr_cpu_menu == 4)
+							curr_cpu_menu = 2;
+
+						highlight_menu(curr_cpu_menu, 0);
+					}
+				} else if (curr_gpu_governor == 1) {
+					if (key == 'C' || key == 'D') {		//left, right
+						draw_square_FORMBD(curr_gpu_menu);
+
+						if (curr_gpu_menu == 1)
+							curr_gpu_menu = 2;
+						else if (curr_gpu_menu == 2)
+							curr_gpu_menu = 1;
+
+						highlight_menu(curr_gpu_menu, 1);
+					}
+				}
+			} else if (gpu_mode == 1) {
+				if (key == ' ') {
+					if (switch_tag != 1 && gpu_dirty == 1) {
+						fp = popen("sudo su -c \"echo 200000000 > /sys/class/devfreq/ff9a0000.gpu/min_freq\"", "r");
+						pclose(fp);
+
+						fp = popen("sudo sed -i 's/\\(t86x_minfreq=\\).*/\\1200000000/g' /boot/config.txt", "r");
+						pclose(fp);
+
+						fp = popen("sudo su -c \"echo 800000000 > /sys/class/devfreq/ff9a0000.gpu/max_freq\"", "r");
+						pclose(fp);
+
+						fp = popen("sudo sed -i 's/\\(t86x_maxfreq=\\).*/\\1800000000/g' /boot/config.txt", "r");
+						pclose(fp);
+
+						for (i = 1; i <= 2; i++)
+							draw_square_FORMBD(i);
+					}
+
+					switch(switch_tag) {
+						case 0:
+							curr_gpu_menu = 0;
+
+							fp = popen("sudo su -c \"echo simple_ondemand > /sys/class/devfreq/ff9a0000.gpu/governor\"", "r");
+							pclose(fp);
+
+							fp = popen("sudo sed -i 's/\\(gpu_governor=\\).*/\\1simple_ondemand/g' /boot/config.txt", "r");
+							pclose(fp);
+
+							fp = popen("sudo su -c \"echo enabled > /sys/class/thermal/thermal_zone1/mode\"", "r");
+							pclose(fp);
+							break;
+						case 1:
+							curr_gpu_menu = 1;
+							priority = 1;
+							highlight_menu(curr_gpu_menu, priority);
+
+							fp = popen("sudo su -c \"echo simple_ondemand > /sys/class/devfreq/ff9a0000.gpu/governor\"", "r");
+							pclose(fp);
+
+							fp = popen("sudo sed -i 's/\\(gpu_governor=\\).*/\\1simple_ondemand/g' /boot/config.txt", "r");
+							pclose(fp);
+
+							fp = popen("sudo su -c \"echo enabled > /sys/class/thermal/thermal_zone1/mode\"", "r");
+							pclose(fp);
+							break;
+						case 2:
+							curr_gpu_menu = 0;
+
+							fp = popen("sudo su -c \"echo powersave > /sys/class/devfreq/ff9a0000.gpu/governor\"", "r");
+							pclose(fp);
+
+							fp = popen("sudo sed -i 's/\\(gpu_governor=\\).*/\\1powersave/g' /boot/config.txt", "r");
+							pclose(fp);
+
+							fp = popen("sudo su -c \"echo enabled > /sys/class/thermal/thermal_zone1/mode\"", "r");
+							pclose(fp);
+							break;
+						case 3:
+							curr_gpu_menu = 0;
+
+							fp = popen("sudo su -c \"echo performance > /sys/class/devfreq/ff9a0000.gpu/governor\"", "r");
+							pclose(fp);
+
+							fp = popen("sudo sed -i 's/\\(gpu_governor=\\).*/\\1performance/g' /boot/config.txt", "r");
+							pclose(fp);
+
+							fp = popen("sudo su -c \"echo disabled > /sys/class/thermal/thermal_zone1/mode\"", "r");
+							pclose(fp);
+							break;
+					}
+				}
+
+				if (key == 'q' || key == ' ') {
+					gpu_mode = 0;
+
+					for (i = 0; i < 4; i++)
+						draw_square_GPUGOVER(i, gpu_mode);
+					draw_square_B(gpu_mode, 1);
+					highlight_menu(curr_gpu_menu, 1);
+
+					if (curr_gpu_governor != 1 && curr_cpu_governor == 1) {
+						priority = 0;
+						highlight_menu(curr_cpu_menu, priority);
+					}
+				} else if (key == 'C') {	//right
+					draw_square_GPUGOVER(switch_tag, gpu_mode);
+
+					if (switch_tag < MAX_GPU_SQ - 1)
+						highlight_square(++switch_tag, 1);
+					else {
+						switch_tag = 0;
+						highlight_square(switch_tag, 1);
+					}
+				} else if (key == 'D') {	//left
+					draw_square_GPUGOVER(switch_tag, gpu_mode);
+
+					if (switch_tag > 0)
+						highlight_square(--switch_tag, 1);
+					else {
+						switch_tag = MAX_GPU_SQ - 1;
+						highlight_square(switch_tag, 1);
+					}
+				}
+			} else if (gpu_mode == 2 || gpu_mode == 3) {
+				if (key == ' ') {
+					gpu_dirty = 1;
+					switch(switch_tag) {
+						case 0:
+							if (gpu_mode == 2 && t86x_max >= 200 ) {
+								fp = popen("sudo su -c \"echo 200000000 > /sys/class/devfreq/ff9a0000.gpu/min_freq\"", "r");
+								pclose(fp);
+
+								fp = popen("sudo sed -i 's/\\(t86x_minfreq=\\).*/\\1200000000/g' /boot/config.txt", "r");
+								pclose(fp);
+
+								gpu_dirty = 0;
+							} else if (gpu_mode == 3 && t86x_min <= 200) {
+								fp = popen("sudo su -c \"echo 200000000 > /sys/class/devfreq/ff9a0000.gpu/max_freq\"", "r");
+								pclose(fp);
+
+								fp = popen("sudo sed -i 's/\\(t86x_maxfreq=\\).*/\\1200000000/g' /boot/config.txt", "r");
+								pclose(fp);
+							}
+							break;
+						case 1:
+							if (gpu_mode == 2 && t86x_max >= 300 ) {
+								fp = popen("sudo su -c \"echo 300000000 > /sys/class/devfreq/ff9a0000.gpu/min_freq\"", "r");
+								pclose(fp);
+
+								fp = popen("sudo sed -i 's/\\(t86x_minfreq=\\).*/\\1300000000/g' /boot/config.txt", "r");
+								pclose(fp);
+							} else if (gpu_mode == 3 && t86x_min <= 300) {
+								fp = popen("sudo su -c \"echo 300000000 > /sys/class/devfreq/ff9a0000.gpu/max_freq\"", "r");
+								pclose(fp);
+
+								fp = popen("sudo sed -i 's/\\(t86x_maxfreq=\\).*/\\1300000000/g' /boot/config.txt", "r");
+								pclose(fp);
+							}
+							break;
+						case 2:
+							if (gpu_mode == 2 && t86x_max >= 400 ) {
+								fp = popen("sudo su -c \"echo 400000000 > /sys/class/devfreq/ff9a0000.gpu/min_freq\"", "r");
+								pclose(fp);
+
+								fp = popen("sudo sed -i 's/\\(t86x_minfreq=\\).*/\\1400000000/g' /boot/config.txt", "r");
+								pclose(fp);
+							} else if (gpu_mode == 3 && t86x_min <= 400) {
+								fp = popen("sudo su -c \"echo 400000000 > /sys/class/devfreq/ff9a0000.gpu/max_freq\"", "r");
+								pclose(fp);
+
+								fp = popen("sudo sed -i 's/\\(t86x_maxfreq=\\).*/\\1400000000/g' /boot/config.txt", "r");
+								pclose(fp);
+							}
+							break;
+						case 3:
+							if (gpu_mode == 2 && t86x_max >= 600 ) {
+								fp = popen("sudo su -c \"echo 600000000 > /sys/class/devfreq/ff9a0000.gpu/min_freq\"", "r");
+								pclose(fp);
+
+								fp = popen("sudo sed -i 's/\\(t86x_minfreq=\\).*/\\1600000000/g' /boot/config.txt", "r");
+								pclose(fp);
+							} else if (gpu_mode == 3 && t86x_min <= 600) {
+								fp = popen("sudo su -c \"echo 600000000 > /sys/class/devfreq/ff9a0000.gpu/max_freq\"", "r");
+								pclose(fp);
+
+								fp = popen("sudo sed -i 's/\\(t86x_maxfreq=\\).*/\\1600000000/g' /boot/config.txt", "r");
+								pclose(fp);
+							}
+							break;
+						case 4:
+							if (gpu_mode == 2 && t86x_max >= 800 ) {
+								fp = popen("sudo su -c \"echo 800000000 > /sys/class/devfreq/ff9a0000.gpu/min_freq\"", "r");
+								pclose(fp);
+
+								fp = popen("sudo sed -i 's/\\(t86x_minfreq=\\).*/\\1800000000/g' /boot/config.txt", "r");
+								pclose(fp);
+							} else if (gpu_mode == 3 && t86x_min <= 800) {
+								fp = popen("sudo su -c \"echo 800000000 > /sys/class/devfreq/ff9a0000.gpu/max_freq\"", "r");
+								pclose(fp);
+
+								fp = popen("sudo sed -i 's/\\(t86x_maxfreq=\\).*/\\1800000000/g' /boot/config.txt", "r");
+								pclose(fp);
+
+								gpu_dirty = 0;
+							}
+							break;
+					}
+				}
+
+				if (key == 'q' || key == ' ') {
+					gpu_mode = 0;
+
+					for (i = 0; i < MAX_T86X_FREQ; i++)
+						draw_square_T86XFREQ(i, gpu_mode);
+					highlight_menu(curr_gpu_menu, 1);
+				} else if (key == 'C') {        //right
+					draw_square_T86XFREQ(switch_tag, gpu_mode);
+
+					if (switch_tag < MAX_T86X_FREQ - 1)
+						highlight_t86x_freq(++switch_tag);
+					else {
+						switch_tag = 0;
+						highlight_t86x_freq(switch_tag);
+					}
+				} else if (key == 'D') {        //left
+					draw_square_T86XFREQ(switch_tag, gpu_mode);
+
+					if (switch_tag > 0)
+						highlight_t86x_freq(--switch_tag);
+					else {
+						switch_tag = MAX_T86X_FREQ - 1;
+						highlight_t86x_freq(switch_tag);
 					}
 				}
 			}
@@ -1358,11 +1892,17 @@ int main() {
 		for (i = 0; i < MAX_CPU_SQ; i++)
 			wrefresh(CPUGOVER[i]);
 
+		for (i = 0; i < MAX_GPU_SQ; i++)
+			wrefresh(GPUGOVER[i]);
+
 		for (i = 0; i < MAX_A53_FREQ; i++)
 			wrefresh(A53FREQ[i]);
 
 		for (i = 0; i < MAX_A72_FREQ; i++)
 			wrefresh(A72FREQ[i]);
+
+		for (i = 0; i < MAX_T86X_FREQ; i++)
+			wrefresh(T86XFREQ[i]);
 
 		wrefresh(BOARDA);
 		wrefresh(BOARDB);
