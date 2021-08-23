@@ -254,6 +254,13 @@ echo $VERSION_NUMBER > /etc/version
 
 systemctl enable rockchip.service
 
+#---------------ncurses library--------------
+# For tinker-power-management build
+cd /usr/local/share/tinker-power-management
+gcc tinker-power-management.c -o tinker-power-management -lncursesw
+mv tinker-power-management /usr/bin
+cd /
+
 #-------------mount partition p7--------------
 systemctl enable mountboot.service
 
