@@ -134,6 +134,20 @@ cd /usr/local/share/gpio_lib_scratch
 sh ./setup.sh
 cd /
 
+#---------------40 pin permission for user --------------
+groupadd gpiouser
+adduser linaro gpiouser
+groupadd i2cuser
+adduser linaro i2cuser
+groupadd spidevuser
+adduser linaro spidevuser
+groupadd uartuser
+adduser linaro uartuser
+groupadd pwmuser
+adduser linaro pwmuser
+
+#-------------------------------------------------------
+
 # Tinker Edge R: Audio
 chmod 755 /etc/audio/auto_audio_switch.sh
 chmod 666 /etc/audio/audio.conf
