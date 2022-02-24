@@ -128,6 +128,7 @@ cd /usr/local/share/gpio_lib_c_rk3399PRO
 # For gpio python library
 cd /usr/local/share/gpio_lib_python_rk3399PRO/
 python setup.py install
+python3 setup.py install
 # For gpio python scratch
 cd /usr/local/share/gpio_lib_scratch
 sh ./setup.sh
