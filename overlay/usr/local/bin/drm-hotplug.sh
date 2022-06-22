@@ -54,8 +54,8 @@ dp_status=$(cat /sys/class/drm/card0-DP-1/status)
 if [ $hdmi_status = "disconnected" ]; then
 	if [ -f $HDMI_HOTPLUG_CONFIG ]; then
 		if [ "$(cat $HDMI_HOTPLUG_CONFIG)" != "Plug_Out" ]; then
-			if [ "$(cat $HDMI_MODE_NODE)" != "" ]; then
-				HDMI_SAVE_MODE="$(cat $HDMI_MODE_NODE |cut -d'p' -f1)"
+			if [ "$(cat $HDMI_MODES_NODE)" != "" ]; then
+				HDMI_SAVE_MODE=$(su $user -c xrandr | grep HDMI | awk '{print$3}' | awk -F '+' '{print$1}')
 				su $user -c "echo $HDMI_SAVE_MODE" > $HDMI_XRANDR_CONFIG
 			fi
 		fi
@@ -68,8 +68,8 @@ fi
 if [ $dp_status = "disconnected" ]; then
 	if [ -f $DP_HOTPLUG_CONFIG ]; then
 		if [ "$(cat $DP_HOTPLUG_CONFIG)" != "Plug_Out" ]; then
-			if [ "$(cat $DP_MODE_NODE)" != "" ]; then
-				DP_SAVE_MODE="$(cat $DP_MODE_NODE |cut -d'p' -f1)"
+			if [ "$(cat $DP_MODES_NODE)" != "" ]; then
+				DP_SAVE_MODE=$(su $user -c xrandr | grep DP | awk '{print$4}' | awk -F '+' '{print$1}')
 				su $user -c "echo $DP_SAVE_MODE" > $DP_XRANDR_CONFIG
 			fi
 		fi
