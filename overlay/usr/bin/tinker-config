@@ -109,10 +109,131 @@ do_internationalisation_menu() {
   fi
 }
 
+is_installed() {
+    if [ "$(dpkg -l "$1" 2> /dev/null | tail -n 1 | cut -d ' ' -f 1)" != "ii" ]; then
+      return 1
+    else
+      return 0
+    fi
+}
+
+get_vnc() {
+  if systemctl status vncserver.service  | grep -q -w active; then
+    echo 0
+  else
+    echo 1
+  fi
+}
+
+do_vnc() {              
+  # Terminal colors
+  NORMAL='\033[0m'
+  RED='\033[31m'
+  GREEN='\033[32;01m'
+  YELLOW='\033[33;01m'
+  BLUE='\033[34m'
+  PURPLE='\033[1;35m'
+  LIGHT_BLUE='\033[1;34m'
+  
+  STATUS=""
+  DEFAULT=--defaultno
+  if [ $(get_vnc) -eq 0 ]; then
+    DEFAULT=
+  fi
+  if [ "$INTERACTIVE" = True ]; then
+    whiptail --yesno "Would you like the VNC Server to be enabled?" $DEFAULT 20 60 2
+    RET=$?
+  else
+    RET=$1
+  fi
+  if [ $RET -eq 0 ]; then
+    printf "$GREEN [vnc] %s $NORMAL\n" "Install tightvncserver"
+    if is_installed tightvncserver || sudo apt-get update && sudo apt-get install xfonts-base tightvncserver autocutsel -y ; then
+
+      if [ -f /root/.vnc/passwd ]; then
+        printf "$GREEN [vnc] %s $NORMAL\n" "have old passwd"
+      else
+        count=0
+        while true; do
+            count=$(($count+1))
+            printf "$GREEN [vnc] %s $NORMAL\n" "Please Input vnc password more than six words."
+            vncpasswd
+            RET=$?
+            if [ $count -gt 4 ]; then
+                printf "$RED [result] %s $NORMAL\n" "vnc passwd mistakes too much give up."
+                break;
+            elif [ $RET -eq 0 ]; then
+                if [ ! -d /home/linaro/.vnc ]; then
+                  mkdir -p /home/linaro/.vnc
+                fi
+                
+                sudo cp -pdR /root/.vnc/passwd /home/linaro/.vnc/passwd
+                sudo chown linaro:linaro /home/linaro/.vnc -R
+                printf "$GREEN [vnc] %s $NORMAL\n" "vnc passwd success."
+                break;
+            elif [ $RET -eq 1 ]; then
+                printf "$RED [result] %s $NORMAL\n" "vnc passwd fail, Please Again."
+            fi
+        done
+      fi
+      
+	cat << EOF > /home/linaro/.vnc/xstartup
+#!/bin/sh
+
+xsetroot -solid grey
+autocutsel -fork
+#x-window-manager &
+# Fix to make GNOME work
+export XKL_XMODMAP_DISABLE=1
+/etc/X11/Xsession
+EOF
+
+	sed -i '3ixrdb $HOME/.Xresources' /home/linaro/.vnc/xstartup
+	sed -i '6i#x-terminal-emulator -geometry 80x24+10+10 -ls -title "$VNCDESKTOP Desktop" &' /home/linaro/.vnc/xstartup
+    sudo chown linaro:linaro /home/linaro/.vnc/xstartup
+    sudo chmod 755 /home/linaro/.vnc/xstartup
+    
+      echo 'linaro' | sudo -S systemctl enable vncserver.service &&
+      echo 'linaro' | sudo -S systemctl start vncserver.service
+      #vncserver :1 -geometry 1920x1080 -depth 24 -dpi 120 -alwaysshared
+    else
+      return 1
+    fi
+    STATUS="enabled"
+  elif [ $RET -eq 1 ]; then
+    sudo vncserver -kill :1 
+    if is_installed tightvncserver; then
+        systemctl disable vncserver.service
+        systemctl stop vncserver.service
+    fi
+    STATUS="disabled"
+  else
+    return $RET
+  fi
+  if [ "$INTERACTIVE" = True ]; then
+    whiptail --msgbox "The VNC Server is $STATUS 5901 Port." 20 60 1
+  fi
+}
+
 do_about() {
   whiptail --msgbox "\
 Asus Tinker Edge Software Configuration Tool v$TOOL_VERSION \n\nThis tool provides a straight-forward way of doing initial configuration of the Asus $PROJ_NAME. Although it can be run at any time, some of the options may have difficulties if you have heavily customised your installation.\
   " 20 70 1
+}
+
+do_interface_menu() {
+  FUN=$(whiptail --title "Asus Tinkerboard Software Configuration Tool (tinker-config)" --menu "Interface Options" $WT_HEIGHT $WT_WIDTH $WT_MENU_HEIGHT --cancel-button Back --ok-button Select \
+    "F1  VNC" "Enable/Disable graphical remote access to your Tinker using TightVNC" \
+    3>&1 1>&2 2>&3)
+  RET=$?
+  if [ $RET -eq 1 ]; then
+    return 0
+  elif [ $RET -eq 0 ]; then
+    case "$FUN" in
+      F1\ *) do_vnc ;;
+      *) whiptail --msgbox "Programmer error: unrecognized option" 20 60 1 ;;
+    esac || whiptail --msgbox "There was an error running option $FUN" 20 60 1
+  fi
 }
 
 #
@@ -153,7 +274,8 @@ Currently some features may not be available as they were not originally designe
       "1 Hostname" "Set the visible name for this Tinker Board on a network" \
       "2 Change User Password" "Change password for the default user ($USER_NAME)" \
       "3 Internationalisation Options" "Set up language and regional settings to match your location" \
-      "4 About tinker-config" "Information about this configuration tool" \
+      "4 Interfacing Options" "Configure connections to peripherals" \
+      "5 About tinker-config" "Information about this configuration tool" \
       3>&1 1>&2 2>&3)
     RET=$?
     if [ $RET -eq 1 ]; then
@@ -163,7 +285,8 @@ Currently some features may not be available as they were not originally designe
         1\ *) do_change_hostname ;;
         2\ *) do_change_pass ;;
         3\ *) do_internationalisation_menu ;;
-        4\ *) do_about ;;
+        4\ *) do_interface_menu ;;
+        5\ *) do_about ;;
         *) whiptail --msgbox "Programmer error: unrecognized option" 20 60 1 ;;
       esac || whiptail --msgbox "There was an error running option $FUN" 20 60 1
     else
