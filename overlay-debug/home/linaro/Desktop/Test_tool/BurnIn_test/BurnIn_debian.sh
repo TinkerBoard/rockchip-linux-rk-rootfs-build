@@ -26,6 +26,7 @@ select_test_item()
 	echo "5. eMMC stress test"
 	echo "6. SD card stress test"
 	echo "7. Network download/upload stress test"
+	echo "8. Memory test"
 	read -p "Select test case: " test_item
 }
 info_view()
@@ -95,6 +96,20 @@ network_stress_test()
 {
 	logfile=$LOG_PATH/network.txt
 	sudo bash $path/rockchip_test/network_stress_test.sh $logfile
+}
+
+memtest()
+{
+	echo "Please enter test time in second"
+	echo "Ex: 12hr -> 43200"
+	echo "    24hr -> 86400"
+	echo "If no string is entered, 43200 will be used"
+	read -p  "Test time: " ddr_test_time
+	if [ -z "$ddr_test_time" ]; then
+		ddr_test_time=43200
+	fi
+	sudo killall stressapptest > /dev/null 2>&1
+	sudo bash $path/rockchip_test/memtest.sh $ddr_test_time
 }
 
 CPU="stressapptest"
@@ -181,6 +196,10 @@ case $test_item in
 		info_view Network
 		network_stress_test
 		;;
+	8)
+		check_memtest_status=true
+		memtest
+		;;
 	*)
 		check_system_status=true
 		logfile="$path/$now"_BurnIn.txt
@@ -196,6 +215,10 @@ case $test_item in
 esac
 
 while true; do
+	if [[ $check_memtest_status == true ]]; then
+		read -p  "Press enter to exit"
+		exit
+	fi
 	if [ $check_system_status == false ]; then
 		exit
 	fi
