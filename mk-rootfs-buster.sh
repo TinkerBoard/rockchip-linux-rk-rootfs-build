@@ -265,6 +265,8 @@ xset +fp /usr/share/fonts/X11/75dpi/
 xset +fp /usr/share/fonts/X11/100dpi/
 
 echo $VERSION_NUMBER > /etc/version
+
+dpkg -i --force-all /packages/systemd_247.3-6_bpo10+1_armhf.deb
 #-------ASUS customization end-------
 
 #---------------Clean--------------
