@@ -287,6 +287,12 @@ start)
 	function_init
 
 	if [ $ADB_EN = on ];then
+		if [ ! -e "/usr/local/bin/adbd" ] ;
+		then
+			echo "File not found: /usr/local/bin/adbd, not suport adb."
+			exit 0
+		fi
+
 		if [ ! -e "/dev/usb-ffs/adb" ] ;
 		then
 			mkdir -p /dev/usb-ffs/adb
