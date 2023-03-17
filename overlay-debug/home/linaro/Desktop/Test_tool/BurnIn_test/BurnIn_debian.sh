@@ -23,6 +23,7 @@ select_test_item()
 	echo "4. Boot-up storage stress test (SD for Tinker Board and eMMC for Tinker Board S"
 	echo "5. SD card stress test (Only for Tinker Board S)"
 	echo "6. Network download/upload stress test"
+	echo "7. Audio stress test"
 	read -p "Select test case: " test_item
 }
 info_view()
@@ -76,12 +77,18 @@ wifi_stress_test()
 	sudo bash $path/rockchip_test/network_stress_test.sh
 }
 
+audio_stress_test()
+{
+	sudo bash $path/rockchip_test/audio_stress_test.sh
+}
+
 CPU="stressapptest"
 GPU="glmark2-es2"
 DDR="memtester"
 EMMC="emmc_stress_test.sh"
 SD="sd_card_stress_test.sh"
 Network="network_stress_test.sh"
+Audio="audio_stress_test.sh"
 
 check_status()
 {
@@ -102,6 +109,7 @@ check_all_status()
 	check_status EMMC $EMMC
 	check_status SD $SD
 	check_status Network $Network
+	check_status Audio $Audio
 }
 
 check_system_status=false
@@ -156,6 +164,11 @@ case $test_item in
 		info_view Wi-Fi
 		wifi_stress_test | tee -a $logfile
 		;;
+	7)
+                logfile="$path/$now"_audio.txt
+                info_view Audio
+                audio_stress_test | tee -a $logfile
+                ;;
 	*)
 		check_system_status=true
 		logfile="$path/$now"_BurnIn.txt
@@ -166,6 +179,7 @@ case $test_item in
 		emmc_stress_test > /dev/null 2>&1 &
 		sd_card_stress_test > /dev/null 2>&1 &
 		wifi_stress_test > /dev/null 2>&1 &
+		audio_stress_test > /dev/null 2>&1 &
 		;;
 esac
 
