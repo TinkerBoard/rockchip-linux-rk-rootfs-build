@@ -24,7 +24,7 @@ if [ ! $VERSION_NUMBER ]; then
 	VERSION_NUMBER="eng"
 fi
 
-if [ ! -e linaro-stretch-alip-*.tar.gz ]; then
+if [ ! -e linaro-stretch-arm64.tar.gz ]; then
 	echo "\033[36m Run mk-base-debian.sh first \033[0m"
 fi
 
@@ -35,7 +35,7 @@ finish() {
 trap finish ERR
 
 echo -e "\033[36m Extract image \033[0m"
-sudo tar -xpf linaro-stretch-alip-*.tar.gz
+sudo tar -xpf linaro-stretch-arm64.tar.gz
 
 echo -e "\033[36m Copy overlay to rootfs \033[0m"
 sudo mkdir -p $TARGET_ROOTFS_DIR/packages
